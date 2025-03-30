@@ -1,18 +1,21 @@
-import { useState } from 'react'
+import { observer } from 'mobx-react-lite'
+import suchStore from '../store/SuchStore'
 import SuchErgebnisseView from '../views/SuchErgebnisseView'
 
-export default function BildVerwaltungPage() {
-  const [searchResults, setSearchResults] = useState<any[]>([])
+const BildVerwaltungPage = observer(() => {
+  const { results } = suchStore
 
   return (
     <div className="flex">
       <main className="flex-1 p-4">
-        {searchResults.length > 0 ? (
-          <SuchErgebnisseView results={searchResults} />
+        {results.length > 0 ? (
+          <SuchErgebnisseView results={results} />
         ) : (
-          <p className="text-gray-500">Bitte eine Aktion im Menü wählen.</p>
+          <p className="text-gray-500">Bitte eine Aktion im Menü wählen oder eine Suche durchführen.</p>
         )}
       </main>
     </div>
   )
-}
+})
+
+export default BildVerwaltungPage
