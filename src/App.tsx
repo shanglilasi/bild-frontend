@@ -3,9 +3,7 @@ import AppLayout from './components/layout/AppLayout'
 import BildVerwaltungPage from './pages/BildVerwaltungPage'
 import DatenbankAbfragePage from './pages/DatenbankAbfragePage'
 
-useEffect(() => {
-  suchStore.loadTestdaten()
-}, [])
+
 
 
 function App() {

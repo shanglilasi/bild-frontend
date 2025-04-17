@@ -1,23 +1,32 @@
+// src/components/Sidebar.tsx
+
 import React, { useState } from 'react'
 import { observer } from 'mobx-react-lite'
-import suchStore from '../store/SuchStore'
+import { useStore } from '../store/StoreContext'
 import SucheView from '../views/SucheView'
 
 const Sidebar: React.FC = observer(() => {
+  const { suchStore } = useStore()
   const { setView, view } = suchStore
 
   const [sucheValues, setSucheValues] = useState({
     text: '',
-    von: '',
-    bis: '',
-    typ: 'Bilder',
+    von: '1900-01-01',
+    bis: new Date().toISOString().split('T')[0],
+    typ: '',
     kategorie: '',
     kamera: '',
   })
 
+
   const handleSearch = () => {
+    if (sucheValues.text.trim().length < 3) {
+      alert("Bitte mindestens 3 Zeichen im Suchtext eingeben.")
+      return
+    }
     suchStore.search(sucheValues)
   }
+
 
   return (
     <div className="w-60 bg-gray-900 text-white p-4 space-y-4 overflow-y-auto">
@@ -41,11 +50,11 @@ const Sidebar: React.FC = observer(() => {
       </div>
 
       {view === 'suche' && (
-        <SucheView
-          values={sucheValues}
-          onChange={setSucheValues}
-          onSearch={handleSearch}
-        />
+   <SucheView
+   values={sucheValues}
+   onChange={setSucheValues}
+   onSearch={handleSearch}
+ />
       )}
     </div>
   )

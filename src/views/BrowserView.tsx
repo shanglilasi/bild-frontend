@@ -1,8 +1,11 @@
+// src/views/BrowserView.tsx
+
 import { observer } from 'mobx-react-lite'
-import suchStore from '../store/SuchStore'
+import { useStore } from '../store/StoreContext'
 import PIC from '../components/PIC'
 
 const BrowserView = observer(() => {
+  const { suchStore } = useStore()
   const bilder = suchStore.results
 
   if (!bilder.length) {

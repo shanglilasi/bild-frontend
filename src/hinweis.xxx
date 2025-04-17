@@ -1,0 +1,7 @@
+timestamp=$(date +"%Y%m%d%H%M")
+output_file="ausgabe_$timestamp.txt"
+find . \( -name "*.ts*"  \) -type f | while read file; do
+  echo "===== $(realpath "$file") =====" >> "$output_file"
+  cat "$file" >> "$output_file"
+  echo -e "\n\n" >> "$output_file"
+done

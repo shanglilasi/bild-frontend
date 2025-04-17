@@ -1,9 +1,13 @@
+// src/views/SuchErgebnisseView.tsx
+
 import { observer } from 'mobx-react-lite'
-import suchStore from '../store/SuchStore'
+import { useStore } from '../store/StoreContext'
 import PIC from '../components/PIC'
 
 
 const SuchErgebnisseView = observer(() => {
+  const { suchStore } = useStore()
+
   const {
     filteredResults,
     sortField,
@@ -13,44 +17,33 @@ const SuchErgebnisseView = observer(() => {
     activeFilters,
   } = suchStore
 
-  const sortedx = [...filteredResults].sort((a, b) => {
-    const valA = a[sortField]?.toString().toLowerCase() ?? ''
-    const valB = b[sortField]?.toString().toLowerCase() ?? ''
-    if (valA < valB) return sortOrder === 'asc' ? -1 : 1
-    if (valA > valB) return sortOrder === 'asc' ? 1 : -1
-    return 0
-  })
-
   const sorted = [...filteredResults].sort((a, b) => {
-    const { sortField, sortOrder } = suchStore
-  
-    let valA = a[sortField]
-    let valB = b[sortField]
-  
-    // Fallback auf leere Strings
+    //let valA = a[sortField]
+    //let valB = b[sortField]
+
+    let valA = a[sortField as keyof typeof a]
+    let valB = b[sortField as keyof typeof b]
+
     if (valA == null) valA = ''
     if (valB == null) valB = ''
-  
-    // Wenn Datum -> echte Date-Objekte vergleichen
+
     if (sortField === 'datum') {
-      valA = new Date(valA)
-      valB = new Date(valB)
-      return sortOrder === 'asc'
-        ? valA - valB
-        : valB - valA
+      const dateA = valA ? new Date(valA as string).getTime() : 0
+      const dateB = valB ? new Date(valB as string).getTime() : 0
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA
     }
-  
-    // Strings vergleichen
+
     valA = valA.toString().toLowerCase()
     valB = valB.toString().toLowerCase()
-  
+
     if (valA < valB) return sortOrder === 'asc' ? -1 : 1
     if (valA > valB) return sortOrder === 'asc' ? 1 : -1
     return 0
   })
 
 
-
+  // Unique Kameras extrahieren und sortieren
+  const uniqueCameras = Array.from(new Set(filteredResults.map(bild => bild.kamera))).sort()
 
 
   return (
@@ -69,19 +62,19 @@ const SuchErgebnisseView = observer(() => {
           </button>
         ))}
 
-        {/* Kamera-Filter */}
-        <select
-          value={activeFilters.kamera}
-          onChange={(e) => setFilter('kamera', e.target.value)}
-          className="border rounded px-2 py-1 text-sm"
-        >
-          <option value="">Alle Kameras</option>
-          <option value="Canon">Canon</option>
-          <option value="Nikon">Nikon</option>
-          <option value="Sony">Sony</option>
-        </select>
+<select
+  value={activeFilters.kamera}
+  onChange={(e) => setFilter('kamera', e.target.value)}
+  className="bg-white border rounded px-3 py-2 ml-2"
+>
+  <option value="">Alle Kameras</option>
+  {uniqueCameras.map(kamera => (
+    <option key={kamera} value={kamera}>
+      {kamera}
+    </option>
+  ))}
+</select>
 
-        {/* Kategorie-Filter */}
         <select
           value={activeFilters.kategorie}
           onChange={(e) => setFilter('kategorie', e.target.value)}
@@ -96,8 +89,9 @@ const SuchErgebnisseView = observer(() => {
 
       {/* Ergebnis-Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {sorted.map((bild, i) => (
-          <PIC key={i} data={bild} />
+        {sorted.map((bild) => (
+        
+          <PIC key={bild.NR} data={bild} />
         ))}
       </div>
     </div>
