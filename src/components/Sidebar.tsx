@@ -16,17 +16,22 @@ const Sidebar: React.FC = observer(() => {
     typ: '',
     kategorie: '',
     kamera: '',
+    fotograf:'',
+    noKategorie: false,
+    noTitle: false,
   })
 
-
   const handleSearch = () => {
-    if (sucheValues.text.trim().length < 3) {
-      alert("Bitte mindestens 3 Zeichen im Suchtext eingeben.")
+    const mindestens3Zeichen = sucheValues.text.trim().length >= 3
+    const kategorieVorhanden = !!sucheValues.kategorie && sucheValues.kategorie !== ''
+  
+    if (!mindestens3Zeichen && !kategorieVorhanden && !sucheValues.noKategorie && !sucheValues.noTitle) {
+      alert("Bitte mindestens 3 Zeichen im Suchtext eingeben oder eine Kategorie wählen.")
       return
     }
+  
     suchStore.search(sucheValues)
   }
-
 
   return (
     <div className="w-60 bg-gray-900 text-white p-4 space-y-4 overflow-y-auto">

@@ -5,7 +5,6 @@ import DatenbankAbfragePage from './pages/DatenbankAbfragePage'
 
 
 
-
 function App() {
   return (
     <Routes>
@@ -13,6 +12,7 @@ function App() {
         <Route path="/" element={<Navigate to="/bilder" />} />
         <Route path="/bilder" element={<BildVerwaltungPage />} />
         <Route path="/abfragen" element={<DatenbankAbfragePage />} />
+  
       </Route>
     </Routes>
   )

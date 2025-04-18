@@ -21,6 +21,7 @@ export const Bild = types.model({
   url: types.string,
   typ: types.string,
   kategorie: types.optional(types.string, ""),
+  fotograf:types.string,
 })
 
 const Kategorie = types.model({
@@ -51,6 +52,7 @@ function transformBackendBild(item: any): BildData {
     ? `http://127.0.0.1:5001/images/${pfad}/${datei}`
     : '',
     kategorie: item.kategorie ?? '',
+    fotograf: item.fotograf ?? '',
   }
 }
 
@@ -88,6 +90,25 @@ const SuchStore = types
     setView(view: string | null) {
       self.view = view
     },
+    updateBild(updatedBild: BildData) {
+      const index = self.results.findIndex((b) => b.NR === updatedBild.NR)
+      if (index >= 0) {
+        self.results[index] = updatedBild as any
+    
+        // 🧠 Trick: sortField ändern & zurücksetzen → MobX reagiert
+        const originalField = self.sortField
+        const originalOrder = self.sortOrder
+    
+        // Verwende ein Dummy-Feld, das du nie benutzt – garantiert Wechsel
+        const dummyField = "__trigger__"
+    
+        self.sortField = dummyField
+        setTimeout(() => {
+          self.sortField = originalField
+          self.sortOrder = originalOrder
+        }, 0)
+      }
+    },
 
     search: flow(function* (values) {
       try {
@@ -102,6 +123,9 @@ const SuchStore = types
             typ: values.typ,
             kategorie: values.kategorie,
             fotograf: values.fotograf,
+            noKategorie: values.noKategorie,
+            noTitle: values.noTitle,
+
           }),
         })
 
@@ -204,8 +228,8 @@ export const createRootStore = () =>
         fotograf: "",
       },
       results: [],
-      sortField: "titel",
-      sortOrder: "asc",
+      sortField: "datum",
+      sortOrder: "desc",
       activeFilters: {
         kamera: "",
         kategorie: "",

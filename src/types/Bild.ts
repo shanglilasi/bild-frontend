@@ -7,4 +7,5 @@ export interface BildData {
     typ: string
     url: string
     kategorie: string
+    fotograf: string
   }

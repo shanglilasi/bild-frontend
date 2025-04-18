@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { useStore } from "../store/StoreContext"
+import KategorieCombobox from '../components/KategorieCombobox'
 
 interface Props {
   values: {
@@ -12,7 +13,9 @@ interface Props {
     typ: string
     kategorie: string
     kamera: string
-    fotograf:string
+    fotograf: string
+    noKategorie: boolean
+    noTitle: boolean
   }
   onChange: (newValues: Props['values']) => void
   onSearch: () => void
@@ -20,12 +23,20 @@ interface Props {
 
 function SucheView({ values, onChange, onSearch }: Props) {
   const { kategorieStore } = useStore()
+  const { suchStore } = useStore()
+  const { results } = suchStore
+
 
   useEffect(() => {
     kategorieStore.loadKategorien()
     kategorieStore.loadKameras()
     kategorieStore.loadFotografen()
   }, [kategorieStore])
+
+  const inputStyle = (val: string) =>
+    `w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 ${
+      val ? 'text-white' : 'text-gray-400 italic'
+    }`
 
   return (
     <form
@@ -35,61 +46,54 @@ function SucheView({ values, onChange, onSearch }: Props) {
         onSearch()
       }}
     >
+      {/* Suchtext */}
       <input
         type="text"
         placeholder="Suchtext"
         value={values.text}
         onChange={(e) => onChange({ ...values, text: e.target.value })}
-        className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white placeholder-white"
+        className={inputStyle(values.text)}
       />
 
+      {/* Kategorie (Combobox hat eigenes Verhalten) */}
+      <KategorieCombobox
+        kategorien={kategorieStore.kategorien}
+        selected={values.kategorie}
+        onChange={(val) => onChange({ ...values, kategorie: val })}
+      />
+
+      {/* Datum von - bis */}
       <div className="flex gap-2">
         <input
           type="date"
           value={values.von}
           onChange={(e) => onChange({ ...values, von: e.target.value })}
-          className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white"
+          className={inputStyle(values.von)}
         />
         <input
           type="date"
           value={values.bis}
           onChange={(e) => onChange({ ...values, bis: e.target.value })}
-          className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white"
+          className={inputStyle(values.bis)}
         />
       </div>
 
+      {/* Medientyp */}
       <select
         value={values.typ}
         onChange={(e) => onChange({ ...values, typ: e.target.value })}
-        className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white"
+        className={inputStyle(values.typ)}
       >
-         <option value="">Medientyp wählen</option>
+        <option value="">Medientyp wählen</option>
         <option value="B">Bilder</option>
         <option value="V">Videos</option>
       </select>
 
-      <select
-        value={values.kategorie}
-        onChange={(e) => onChange({ ...values, kategorie: e.target.value })}
-        className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white"
-      >
-        <option value="">Kategorie wählen</option>
-        {kategorieStore.loading && <option>Lade Kategorien...</option>}
-        {kategorieStore.error && (
-          <option disabled>Fehler beim Laden</option>
-        )}
-        {!kategorieStore.loading &&
-          kategorieStore.kategorien.map((kat) => (
-            <option key={kat.id} value={kat.id}>
-              {kat.name}
-            </option>
-          ))}
-      </select>
-
+      {/* Kamera */}
       <select
         value={values.kamera}
         onChange={(e) => onChange({ ...values, kamera: e.target.value })}
-        className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white"
+        className={inputStyle(values.kamera)}
       >
         <option value="">Kamera wählen</option>
         {kategorieStore.kamerasLoading && <option>Lade Kameras...</option>}
@@ -105,20 +109,17 @@ function SucheView({ values, onChange, onSearch }: Props) {
           ))}
       </select>
 
-
+      {/* Fotograf */}
       <select
         value={values.fotograf}
         onChange={(e) => onChange({ ...values, fotograf: e.target.value })}
-        className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white"
+        className={inputStyle(values.fotograf)}
       >
         <option value="">Fotograf wählen</option>
-
         {kategorieStore.fotografenLoading && <option>Lade Fotograf...</option>}
-
         {kategorieStore.fotografenError && (
           <option disabled>Fehler beim Laden fotograf</option>
         )}
-
         {!kategorieStore.fotografenLoading &&
           !kategorieStore.fotografenError &&
           kategorieStore.fotografen.map((fotograf) => (
@@ -127,16 +128,42 @@ function SucheView({ values, onChange, onSearch }: Props) {
             </option>
           ))}
       </select>
+{/* Checkbox: NoKategorie */}
+<div className="flex items-center space-x-2">
+  <input
+    type="checkbox"
+    id="noKategorie"
+    checked={values.noKategorie}
+    onChange={(e) => onChange({ ...values, noKategorie: e.target.checked })}
+  />
+  <label htmlFor="noKategorie" className="text-white">Ohne Kategorie</label>
+</div>
 
+{/* Checkbox: NoTitle */}
+<div className="flex items-center space-x-2">
+  <input
+    type="checkbox"
+    id="noTitle"
+    checked={values.noTitle}
+    onChange={(e) => onChange({ ...values, noTitle: e.target.checked })}
+  />
+  <label htmlFor="noTitle" className="text-white">Ohne Titel</label>
+</div>
 
-
-
+      {/* Suchbutton */}
       <button
         type="submit"
         className="w-full bg-blue-600 text-white py-1 rounded hover:bg-blue-700"
       >
         Suchen
       </button>
+
+
+      {results.length > 0 && (
+          <p className="text-sm text-gray-600">
+            {results.length} Treffer gefunden.
+          </p>
+        )}
     </form>
   )
 }
