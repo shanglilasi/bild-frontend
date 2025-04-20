@@ -1,11 +1,14 @@
-//components/KategorieForm.tsx
+////components/KategorieForm
 import { useState, useEffect } from 'react'
 import KategorieCombobox from './KategorieCombobox'
+import KategorieListe from './Kategorieliste' 
+import { useStore } from '../store/StoreContext' 
 
 type Kategorie = {
   id: number
   bezeichnung: string
   kattyp: string
+  beschreibung: string
   ober: number
   hidden: number
 }
@@ -13,6 +16,7 @@ type Kategorie = {
 type KategorieFilter = {
   bezeichnung?: string
   kattyp?: string
+  beschreibung?: string
   ober?: number | null
   hidden?: number
 }
@@ -30,7 +34,7 @@ type Props = {
   kategorien: Kategorie[]
   onSearch: (filter: KategorieFilter) => void
   onSave: (data: FormData, isUpdate: boolean) => void
-  initialData?: Partial<FormData> // wenn ein Treffer ausgewählt wurde
+  initialData?: Partial<FormData>
 }
 
 export default function KategorieForm({
@@ -46,8 +50,9 @@ export default function KategorieForm({
   const [beschreibung, setBeschreibung] = useState('')
   const [hidden, setHidden] = useState(false)
   const [error, setError] = useState('')
-
-  // 🔁 initialData beim Bearbeiten setzen
+  const [showHierarchie, setShowHierarchie] = useState(false) 
+  const { suchStore } = useStore() // ⬅️ innerhalb der Komponente für die Bildzuordnung erforderlich
+  
   useEffect(() => {
     if (initialData) {
       setNr(initialData.NR ?? null)
@@ -83,8 +88,11 @@ export default function KategorieForm({
       return
     }
 
+
+
+
     const data: FormData = {
-      NR: isUpdate ? nr! : Date.now(), // Dummy bei Neuanlage
+      NR: isUpdate ? nr! : Date.now(),
       BEZEICHNUNG: bezeichnung,
       KATTYP: kattyp,
       OBER: ober ? parseInt(ober) : null,
@@ -96,8 +104,53 @@ export default function KategorieForm({
     setError('')
   }
 
+  const handleReset = () => {
+    setNr(null)
+    setBezeichnung('')
+    setKattyp('')
+    setOber('')
+    setBeschreibung('')
+    setHidden(false)
+    setError('')
+  }
+
+  const handleMassenzuweisung = async () => {
+    const kat = kategorien.find(k => k.bezeichnung === bezeichnung && k.kattyp === kattyp)
+    if (!kat) {
+      alert("Kategorie nicht gefunden oder unvollständig.")
+      return
+    }
+
+    const treffer = suchStore.results
+    if (!treffer.length) {
+      alert("Keine Treffer gefunden.")
+      return
+    }
+
+    const confirmed = window.confirm(`Allen ${treffer.length} Treffern die Kategorie "${kat.bezeichnung}" zuweisen?`)
+    if (!confirmed) return
+
+    try {
+      const promises = treffer.map(bild =>
+        fetch(`http://127.0.0.1:5001/addKat/${bild.NR}/${kat.id}`, {
+          method: "POST"
+        })
+      )
+      await Promise.all(promises)
+      alert("Kategorie erfolgreich allen Treffern zugewiesen.")
+    } catch (err) {
+      console.error("Fehler bei der Massenzuweisung:", err)
+      alert("Zuweisung fehlgeschlagen.")
+    }
+  }
+
+
+
+
+
   return (
     <div className="space-y-4 p-4 bg-orange-700 text-white rounded shadow-md">
+      {/* Eingabefelder */}
       <div>
         <label className="block font-medium">Bezeichnung</label>
         <input
@@ -116,9 +169,7 @@ export default function KategorieForm({
         >
           <option value="">Bitte wählen</option>
           {uniqueKattyp.map((typ) => (
-            <option key={typ} value={typ}>
-              {typ}
-            </option>
+            <option key={typ} value={typ}>{typ}</option>
           ))}
         </select>
       </div>
@@ -133,13 +184,15 @@ export default function KategorieForm({
       </div>
 
       <div>
-        <label className="block font-medium">Beschreibung</label>
-        <textarea
-          value={beschreibung}
-          onChange={(e) => setBeschreibung(e.target.value)}
-          className="w-full border px-2 py-1 bg-orange-800 rounded"
-        />
-      </div>
+  <label className="block font-medium text-xs">Beschreibung</label>
+  <textarea
+    value={beschreibung}
+    onChange={(e) => setBeschreibung(e.target.value)}
+    rows={4} // z. B. 4 Zeilen – kann auch 6, 8, ... sein
+    className="w-full border px-2 py-1 bg-orange-800 rounded text-xs resize-vertical"
+    placeholder="Beschreibung eingeben..."
+  />
+</div>
 
       <div className="flex items-center space-x-2">
         <input
@@ -152,20 +205,62 @@ export default function KategorieForm({
 
       {error && <div className="text-red-400">{error}</div>}
 
-      <div className="flex space-x-2">
-        <button
-          onClick={handleSearch}
-          className="w-1/2 bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
-        >
-          Suche
+{/* 🆕 Massen-Zuweisung (nur wenn NR vorhanden) */}
+{nr !== null && (
+  <button
+    type="button"
+    onClick={handleMassenzuweisung}
+    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+    title="Allen Treffern diese Kategorie zuweisen"
+  >
+    Allen Bildern zuweisen
+  </button>
+)}
+
+
+
+
+
+      {/* Buttons */}
+      <div className="flex flex-wrap gap-2">
+        <button onClick={handleSearch} className="hover:bg-gray-500 text-white px-2  rounded">
+          🔍
         </button>
+        <button onClick={handleSave} className="hover:bg-blue-700 text-white px-2  rounded">
+          ✅
+        </button>
+        <button onClick={handleReset} className="hover:bg-red-700 text-white px-2  rounded">
+          ✖️
+        </button>
+        </div>
+        <div>
         <button
-          onClick={handleSave}
-          className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          type="button"
+          onClick={() => setShowHierarchie(!showHierarchie)}
+          className="text-xs underline hover:text-blue-200"
+          title="Kategorieliste anzeigen"
         >
-          Speichern
+          {showHierarchie ? 'Verbergen' : ' Liste zeigen'}
         </button>
       </div>
+
+      {/* Liste anzeigen */}
+      {showHierarchie && (
+  <div className="fixed top-0 right-0 h-full w-5/6 bg-white shadow-lg z-50 overflow-auto p-4">
+    <div className="flex justify-between items-center mb-2">
+      <h2 className="text-lg font-bold text-gray-800">Kategorieliste</h2>
+      <button
+        onClick={() => setShowHierarchie(false)}
+        className="text-gray-600 hover:text-red-500 text-xl font-bold"
+        title="Schließen"
+      >
+        ×
+      </button>
+
+    </div>
+    <KategorieListe kategorien={kategorien} />
+  </div>
+)}
     </div>
   )
 }

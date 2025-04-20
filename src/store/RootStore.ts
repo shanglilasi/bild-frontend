@@ -29,6 +29,7 @@ export const Bild = types.model({
 const Kategorie = types.model({
   id: types.identifierNumber,
   bezeichnung: types.string,
+  beschreibung: types.string,
   kattyp: types.string,
   ober: types.maybeNull(types.number),
   hidden: types.number,
@@ -180,10 +181,12 @@ const KategorieStore = types
         const data = yield res.json()
        // self.kategorien = data
 
+
         self.kategorien = cast(
           data.map((item: any) => ({
             id: Number(item.id),
             bezeichnung: item.bezeichnung ?? '',
+            beschreibung: item.beschreibung ?? '',
             kattyp: item.kattyp ?? '',
             ober: item.ober ?? null,
             hidden: item.hidden ?? 0,

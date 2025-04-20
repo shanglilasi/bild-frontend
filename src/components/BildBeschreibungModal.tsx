@@ -1,3 +1,4 @@
+//components/BildBeschreibungModal.tsx
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "../store/StoreContext"
 import KategorieCombobox from "./KategorieCombobox"

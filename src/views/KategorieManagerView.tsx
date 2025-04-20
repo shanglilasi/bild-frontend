@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import { useStore } from '../store/StoreContext'
-import KategorieForm from '../components/KategorieForm'
-import DatensatzNavigator from '../components/DatensatzNavigation'
 
+import KategorieListe from '../components/Kategorieliste'
 type Kategorie = {
   id: number
   bezeichnung: string
@@ -66,38 +65,11 @@ const KategorieManagerView: React.FC = observer(() => {
     <div className="space-y-4">
       <h2 className="text-lg font-bold text-gray-800">Kategorien verwalten</h2>
 
-      <KategorieForm
-        kategorien={kategorieStore.kategorien}
-        onSearch={handleSearch}
-        onSave={handleSave}
-        initialData={
-          activeData
-            ? {
-                NR: activeData.id,
-                BEZEICHNUNG: activeData.bezeichnung,
-                KATTYP: activeData.kattyp,
-                OBER: activeData.ober,
-                BESCHREIBUNG: activeData.beschreibung ?? '',
-                hidden: activeData.hidden,
-              }
-            : undefined
-        }
-      />
 
-      {treffer.length > 0 && activeIndex !== null && (
-        <DatensatzNavigator
-          index={activeIndex}
-          total={treffer.length}
-          onPrev={() =>
-            setActiveIndex((i) => Math.max((i ?? 1) - 1, 0))
-          }
-          onNext={() =>
-            setActiveIndex((i) =>
-              Math.min((i ?? 0) + 1, treffer.length - 1)
-            )
-          }
-        />
-      )}
+
+
+<KategorieListe kategorien={kategorieStore.kategorien} />
+
     </div>
   )
 })
