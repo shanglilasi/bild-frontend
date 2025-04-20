@@ -6,8 +6,8 @@ export default function Navigation() {
   const navLinks = [
     { to: '/bilder', label: 'Bildverwaltung' },
     { to: '/abfragen', label: 'Abfragen' },
-    { to: '/personen', label: 'Personen' },
-    { to: '/kategorien', label: 'Kategorien' }
+
+
   ]
 
   return (
