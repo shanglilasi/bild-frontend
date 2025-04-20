@@ -3,6 +3,9 @@ import AppLayout from './components/layout/AppLayout'
 import BildVerwaltungPage from './pages/BildVerwaltungPage'
 import DatenbankAbfragePage from './pages/DatenbankAbfragePage'
 
+import KategorieManagerView from './views/KategorieManagerView'
+
+
 
 
 function App() {
@@ -12,7 +15,7 @@ function App() {
         <Route path="/" element={<Navigate to="/bilder" />} />
         <Route path="/bilder" element={<BildVerwaltungPage />} />
         <Route path="/abfragen" element={<DatenbankAbfragePage />} />
-  
+        <Route path="/kategorien" element={<KategorieManagerView />} />
       </Route>
     </Routes>
   )

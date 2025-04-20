@@ -7,6 +7,7 @@ export default function Navigation() {
     { to: '/bilder', label: 'Bildverwaltung' },
     { to: '/abfragen', label: 'Abfragen' },
     { to: '/personen', label: 'Personen' },
+    { to: '/kategorien', label: 'Kategorien' }
   ]
 
   return (

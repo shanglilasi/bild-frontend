@@ -4,6 +4,9 @@ import AppLayout from './components/layout/AppLayout'
 import BildVerwaltungPage from './pages/BildVerwaltungPage'
 import DatenbankAbfragePage from './pages/DatenbankAbfragePage'
 
+import KategorieManagerView from './views/KategorieManagerView'
+
+
 
 
 function App() {
@@ -13,7 +16,7 @@ function App() {
         <Route path="/" element={<Navigate to="/bilder" />} />
         <Route path="/bilder" element={<BildVerwaltungPage />} />
         <Route path="/abfragen" element={<DatenbankAbfragePage />} />
-  
+        <Route path="/kategorien" element={<KategorieManagerView />} />
       </Route>
     </Routes>
   )
@@ -38,7 +41,7 @@ const rootStore = createRootStore()
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <StoreContext.Provider value={rootStore}>
-      <BrowserRouter>
+      <BrowserRouter basename="/react">
         <App />
       </BrowserRouter>
     </StoreContext.Provider>
@@ -80,6 +83,7 @@ export default function BildBeschreibungModal({
   const [vorgeschlageneKategorien, setVorgeschlageneKategorien] = useState<any[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [refreshNeeded, setRefreshNeeded] = useState(false)
+  const [lastPicInfo, setLastPicInfo] = useState<{ NR: number; info: string } | null>(null)
 
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -143,8 +147,19 @@ export default function BildBeschreibungModal({
       }
     }
 
+    const fetchLastPicInfo = async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:5001/lastPicInfo/${nr}`)
+        const data = await res.json()
+        setLastPicInfo(data.bild)
+      } catch (err) {
+        console.error("Fehler beim Laden des vorherigen Bildes:", err)
+      }
+    }
+
     loadBild()
     fetchVorschlaege()
+    fetchLastPicInfo()
   }, [nr])
 
   useEffect(() => {
@@ -216,6 +231,32 @@ export default function BildBeschreibungModal({
     }
   }
 
+  const handleSameAsLastPic = async () => {
+    if (!lastPicInfo) return
+
+    try {
+      const res = await fetch(`http://127.0.0.1:5001/api/sameAsPic/${nr}/${lastPicInfo.NR}`, {
+        method: "POST",
+      })
+      if (!res.ok) throw new Error("Fehler beim Übernehmen")
+
+      // Bilddaten aktualisieren
+      await reloadKategorien()
+      const newBildRes = await fetch(`http://127.0.0.1:5001/api/bild/${nr}`)
+      const newData = await newBildRes.json()
+      const url = `http://127.0.0.1:5001/images/${newData.bild.pfad}/${newData.bild.datei}`
+      setBild({
+        ...bild!,
+        ...newData.bild,
+        url,
+      })
+
+      setRefreshNeeded(true)
+    } catch (err) {
+      console.error("Fehler beim Übernehmen vom vorherigen Bild:", err)
+    }
+  }
+
   if (!bild) return null
 
   return (
@@ -229,112 +270,172 @@ export default function BildBeschreibungModal({
         onClick={(e) => e.stopPropagation()}
       >
         <img src={bild.url} alt={bild.titel} className="rounded max-w-full" />
-        
-  {/* Titel */}
-  <div className="flex items-start gap-2">
-    <label className="w-24 shrink-0 font-medium pt-1">Titel:</label>
-    <textarea
-      className="w-full border px-2 py-1 rounded resize-none"
-      rows={3}
-      value={bild.titel}
-      onChange={(e) => handleChange("titel", e.target.value)}
-    />
-  </div>
 
-  {/* Fotograf */}
-  <div className="flex items-center gap-2">
-    <label className="w-24 shrink-0 font-medium">Fotograf:</label>
-    <input
-      className="flex-1 border px-2 py-1 rounded"
-      value={bild.fotograf}
-      onChange={(e) => handleChange("fotograf", e.target.value)}
-    />
-  </div>
+        {/* Titel */}
+        <div className="flex items-start gap-2">
+          <label className="w-24 shrink-0 font-medium pt-1">Titel:</label>
+          <textarea
+            className="w-full border px-2 py-1 rounded resize-none"
+            rows={3}
+            value={bild.titel}
+            onChange={(e) => handleChange("titel", e.target.value)}
+          />
+        </div>
 
-  {/* Kamera */}
-  <div className="flex items-center gap-2">
-    <label className="w-24 shrink-0 font-medium">Kamera:</label>
-    <input
-      className="flex-1 border px-2 py-1 rounded"
-      value={bild.kamera}
-      onChange={(e) => handleChange("kamera", e.target.value)}
-    />
-  </div>
-{/* Zugewiesene Kategorien */}
-{kategorien.length > 0 && (
-    <div className="mt-2 flex flex-wrap gap-2 max-h-24 overflow-auto text-xs">
-      {kategorien.map((kat) => (
-        <span
-          key={kat.id}
-          onDoubleClick={() => handleKategorieEntfernen(kat.id)}
-          className="bg-blue-100 text-blue-800 px-2 py-1 rounded cursor-pointer hover:bg-red-100"
-          title="Doppelklick zum Entfernen"
-        >
-          {kat.bezeichnung}
-        </span>
-      ))}
-    </div>
-  )}
+        {/* Fotograf */}
+        <div className="flex items-center gap-2">
+          <label className="w-24 shrink-0 font-medium">Fotograf:</label>
+          <input
+            className="flex-1 border px-2 py-1 rounded"
+            value={bild.fotograf}
+            onChange={(e) => handleChange("fotograf", e.target.value)}
+          />
+        </div>
 
+        {/* Kamera */}
+        <div className="flex items-center gap-2">
+          <label className="w-24 shrink-0 font-medium">Kamera:</label>
+          <input
+            className="flex-1 border px-2 py-1 rounded"
+            value={bild.kamera}
+            onChange={(e) => handleChange("kamera", e.target.value)}
+          />
+        </div>
 
+        {/* Zugewiesene Kategorien */}
+        {kategorien.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2 max-h-24 overflow-auto text-xs">
+            {kategorien.map((kat) => (
+              <span
+                key={kat.id}
+                onDoubleClick={() => handleKategorieEntfernen(kat.id)}
+                className="bg-blue-100 text-blue-800 px-2 py-1 rounded cursor-pointer hover:bg-red-100"
+                title="Doppelklick zum Entfernen"
+              >
+                {kat.bezeichnung}
+              </span>
+            ))}
+          </div>
+        )}
 
+        {/* Kategorie-Combobox */}
+        <div className="flex items-center gap-2">
+          <label className="w-24 shrink-0 font-medium">weitere Kategorien zuordnen:</label>
+          <KategorieCombobox
+            kategorien={kategorieStore.kategorien}
+            selected={""}
+            onChange={(val) => handleKategorieHinzufuegen(val)}
+          />
+        </div>
 
+        {/* Vorgeschlagene Kategorien */}
+        {vorgeschlageneKategorien.length > 0 && (
+          <div className="mt-2 text-sm">
+            <div className="flex flex-wrap gap-2 text-xs">
+              {vorgeschlageneKategorien.map((kat) => (
+                <span
+                  key={kat.id}
+                  onDoubleClick={async () => {
+                    await handleKategorieHinzufuegen(kat.id)
+                    setVorgeschlageneKategorien((prev) =>
+                      prev.filter((k) => k.id !== kat.id)
+                    )
+                  }}
+                  className="bg-gray-100 text-gray-800 px-2 py-1 rounded cursor-pointer hover:bg-green-100"
+                  title={kat.beschreibung || ""}
+                >
+                  {kat.bezeichnung}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
-  {/* Kategorie-Combobox */}
-  <div className="flex items-center gap-2">
-    <label className="w-24 shrink-0 font-medium">weitere Kategorien zuordnen:</label>
-    <KategorieCombobox
-      kategorien={kategorieStore.kategorien}
-      selected={""}
-      onChange={(val) => handleKategorieHinzufuegen(val)}
-    />
-  </div>
-
-  
-  {/* Vorgeschlagene Kategorien */}
-  {vorgeschlageneKategorien.length > 0 && (
-    <div className="mt-2 text-sm">
-      <div className="flex flex-wrap gap-2 text-xs">
-        {vorgeschlageneKategorien.map((kat) => (
-          <span
-            key={kat.id}
-            onDoubleClick={async () => {
-              await handleKategorieHinzufuegen(kat.id)
-              setVorgeschlageneKategorien((prev) =>
-                prev.filter((k) => k.id !== kat.id)
-              )
-            }}
-            className="bg-gray-100 text-gray-800 px-2 py-1 rounded cursor-pointer hover:bg-green-100"
-            title={kat.beschreibung || ""}
+        {/* Übernehmen von vorherigem Bild */}
+        {lastPicInfo && (
+          <div
+            className="bg-yellow-100 border border-yellow-400 rounded px-3 py-2 text-sm cursor-pointer hover:bg-yellow-200 relative group select-none"
+            title="Doppelklick zum Übernehmen"
+            onDoubleClick={handleSameAsLastPic}
           >
-            {kat.bezeichnung}
-          </span>
-        ))}
+            Übernehmen von vorherigem Bild
+            <div className="absolute left-0 bottom-full mb-1 w-max max-w-sm bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              {lastPicInfo.info}
+            </div>
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="flex gap-2 pt-2">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+          >
+            {isSaving ? "Speichern..." : "Speichern"}
+          </button>
+          <button
+            onClick={handleCancel}
+            className="text-gray-600 hover:text-black"
+          >
+            Abbrechen
+          </button>
+        </div>
       </div>
     </div>
-  )}
-
-  {/* Buttons */}
-      <div className="flex gap-2 pt-2">
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-        >
-          {isSaving ? "Speichern..." : "Speichern"}
-        </button>
-        <button
-          onClick={handleCancel}
-          className="text-gray-600 hover:text-black"
-        >
-          Abbrechen
-        </button>
-    </div>
-</div>
-</div>
-
   )
 }
+
+
+===== /Users/rolf/Documents/Programierung/React/bild-frontend/src/components/DatensatzNavigation.tsx =====
+
+//components/DatensatzNavigation.tsx
+
+type DatensatzNavigatorProps = {
+    index: number
+    total: number
+    onPrev: () => void
+    onNext: () => void
+  }
+  
+  export default function DatensatzNavigator({
+    index,
+    total,
+    onPrev,
+    onNext,
+  }: DatensatzNavigatorProps) {
+    if (total === 0) return null
+  
+    return (
+      <div className="flex items-center justify-between bg-gray-800 text-white px-4 py-2 rounded">
+        <button
+          onClick={onPrev}
+          disabled={index <= 0}
+          className={`px-3 py-1 rounded ${
+            index <= 0 ? 'bg-gray-700 text-gray-500' : 'bg-blue-600 hover:bg-blue-500'
+          }`}
+        >
+          ◀
+        </button>
+  
+        <span className="text-sm">
+          Treffer {index + 1} von {total}
+        </span>
+  
+        <button
+          onClick={onNext}
+          disabled={index >= total - 1}
+          className={`px-3 py-1 rounded ${
+            index >= total - 1
+              ? 'bg-gray-700 text-gray-500'
+              : 'bg-blue-600 hover:bg-blue-500'
+          }`}
+        >
+          ▶
+        </button>
+      </div>
+    )
+  }
 
 
 ===== /Users/rolf/Documents/Programierung/React/bild-frontend/src/components/layout/AppLayout.tsx =====
@@ -380,7 +481,7 @@ import { useEffect, useState } from 'react'
 
 type Kategorie = {
   id: number
-  name: string
+  bezeichnung: string
 }
 
 export default function KategorieCombobox({
@@ -408,7 +509,7 @@ export default function KategorieCombobox({
       ? kategorien.slice(0, 50) // Max 50 bei leerer Eingabe
       : kategorien
           .filter((kat) =>
-            kat.name.toLowerCase().includes(debouncedQuery.toLowerCase())
+            kat.bezeichnung.toLowerCase().includes(debouncedQuery.toLowerCase())
           )
           .slice(0, 50) // Max 50 auch bei Suche
 
@@ -418,7 +519,7 @@ export default function KategorieCombobox({
         <Combobox.Input
           onChange={(event) => setQuery(event.target.value)}
           displayValue={(val: string) =>
-            kategorien.find((k) => k.id.toString() === val)?.name || ''
+            kategorien.find((k) => k.id.toString() === val)?.bezeichnung || ''
           }
           className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white placeholder-white"
           placeholder="Kategorie wählen"
@@ -437,12 +538,186 @@ export default function KategorieCombobox({
                 }`
               }
             >
-              {kat.name}
+              {kat.bezeichnung}
             </Combobox.Option>
           ))}
         </Combobox.Options>
       </div>
     </Combobox>
+  )
+}
+
+
+===== /Users/rolf/Documents/Programierung/React/bild-frontend/src/components/KategorieForm.tsx =====
+//components/KategorieForm.tsx
+import { useState, useEffect } from 'react'
+import KategorieCombobox from './KategorieCombobox'
+
+type Kategorie = {
+  id: number
+  bezeichnung: string
+  kattyp: string
+  ober: number
+  hidden: number
+}
+
+type KategorieFilter = {
+  bezeichnung?: string
+  kattyp?: string
+  ober?: number | null
+  hidden?: number
+}
+
+type FormData = {
+  NR: number | null
+  BEZEICHNUNG: string
+  KATTYP: string
+  OBER: number | null
+  BESCHREIBUNG: string
+  hidden: number
+}
+
+type Props = {
+  kategorien: Kategorie[]
+  onSearch: (filter: KategorieFilter) => void
+  onSave: (data: FormData, isUpdate: boolean) => void
+  initialData?: Partial<FormData> // wenn ein Treffer ausgewählt wurde
+}
+
+export default function KategorieForm({
+  kategorien,
+  onSearch,
+  onSave,
+  initialData,
+}: Props) {
+  const [nr, setNr] = useState<number | null>(null)
+  const [bezeichnung, setBezeichnung] = useState('')
+  const [kattyp, setKattyp] = useState('')
+  const [ober, setOber] = useState('')
+  const [beschreibung, setBeschreibung] = useState('')
+  const [hidden, setHidden] = useState(false)
+  const [error, setError] = useState('')
+
+  // 🔁 initialData beim Bearbeiten setzen
+  useEffect(() => {
+    if (initialData) {
+      setNr(initialData.NR ?? null)
+      setBezeichnung(initialData.BEZEICHNUNG ?? '')
+      setKattyp(initialData.KATTYP ?? '')
+      setOber(initialData.OBER?.toString() ?? '')
+      setBeschreibung(initialData.BESCHREIBUNG ?? '')
+      setHidden(initialData.hidden === 1)
+    }
+  }, [initialData])
+
+  const uniqueKattyp = Array.from(new Set(kategorien.map((k) => k.kattyp))).sort()
+
+  const handleSearch = () => {
+    onSearch({
+      bezeichnung: bezeichnung || undefined,
+      kattyp: kattyp || undefined,
+      ober: ober ? parseInt(ober) : undefined,
+      hidden: hidden ? 1 : 0,
+    })
+  }
+
+  const handleSave = () => {
+    const isUpdate = !!nr
+
+    if (!bezeichnung || !kattyp) {
+      setError('Bezeichnung und Kategorietyp sind erforderlich.')
+      return
+    }
+
+    if (!isUpdate && kategorien.some(k => k.bezeichnung.toLowerCase() === bezeichnung.toLowerCase())) {
+      setError('Ein Eintrag mit dieser Bezeichnung existiert bereits.')
+      return
+    }
+
+    const data: FormData = {
+      NR: isUpdate ? nr! : Date.now(), // Dummy bei Neuanlage
+      BEZEICHNUNG: bezeichnung,
+      KATTYP: kattyp,
+      OBER: ober ? parseInt(ober) : null,
+      BESCHREIBUNG: beschreibung,
+      hidden: hidden ? 1 : 0,
+    }
+
+    onSave(data, isUpdate)
+    setError('')
+  }
+
+  return (
+    <div className="space-y-4 p-4 bg-orange-700 text-white rounded shadow-md">
+      <div>
+        <label className="block font-medium">Bezeichnung</label>
+        <input
+          value={bezeichnung}
+          onChange={(e) => setBezeichnung(e.target.value)}
+          className="w-full border px-2 py-1 bg-orange-800 rounded"
+        />
+      </div>
+
+      <div>
+        <label className="block font-medium">Kategorietyp</label>
+        <select
+          value={kattyp}
+          onChange={(e) => setKattyp(e.target.value)}
+          className="w-full border px-2 py-1 bg-orange-800 rounded"
+        >
+          <option value="">Bitte wählen</option>
+          {uniqueKattyp.map((typ) => (
+            <option key={typ} value={typ}>
+              {typ}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block font-medium">Oberkategorie</label>
+        <KategorieCombobox
+          kategorien={kategorien}
+          selected={ober}
+          onChange={setOber}
+        />
+      </div>
+
+      <div>
+        <label className="block font-medium">Beschreibung</label>
+        <textarea
+          value={beschreibung}
+          onChange={(e) => setBeschreibung(e.target.value)}
+          className="w-full border px-2 py-1 bg-orange-800 rounded"
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          checked={hidden}
+          onChange={(e) => setHidden(e.target.checked)}
+        />
+        <label>Versteckt</label>
+      </div>
+
+      {error && <div className="text-red-400">{error}</div>}
+
+      <div className="flex space-x-2">
+        <button
+          onClick={handleSearch}
+          className="w-1/2 bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
+        >
+          Suche
+        </button>
+        <button
+          onClick={handleSave}
+          className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        >
+          Speichern
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -480,9 +755,10 @@ import React, { useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import { useStore } from '../store/StoreContext'
 import SucheView from '../views/SucheView'
+import KategorieForm from './KategorieForm'
 
 const Sidebar: React.FC = observer(() => {
-  const { suchStore } = useStore()
+  const { suchStore, kategorieStore } = useStore()
   const { setView, view } = suchStore
 
   const [sucheValues, setSucheValues] = useState({
@@ -497,6 +773,8 @@ const Sidebar: React.FC = observer(() => {
     noTitle: false,
   })
 
+  const [showKategorieForm, setShowKategorieForm] = useState(false)
+
   const handleSearch = () => {
     const mindestens3Zeichen = sucheValues.text.trim().length >= 3
     const kategorieVorhanden = !!sucheValues.kategorie && sucheValues.kategorie !== ''
@@ -508,6 +786,46 @@ const Sidebar: React.FC = observer(() => {
   
     suchStore.search(sucheValues)
   }
+
+  const kategorien = kategorieStore?.kategorien || []
+
+
+  const handleKategorieSubmit = async (data: {
+    NR: number
+    BEZEICHNUNG: string
+    KATTYP: string
+    OBER: number | null
+    BESCHREIBUNG: string
+    hidden: number
+  }) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/kategorien', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+  
+      const result = await response.json()
+  
+      if (!response.ok) {
+        alert(`Fehler beim Speichern: ${result.error || 'Unbekannter Fehler'}`)
+        return
+      }
+  
+      // ✅ Kategorie-Liste vollständig neu laden
+      await kategorieStore.loadKategorien()
+  
+      // ✅ Formular ausblenden
+      setShowKategorieForm(false)
+    } catch (error) {
+      console.error('Fehler beim Speichern der Kategorie:', error)
+      alert('Ein Fehler ist beim Speichern aufgetreten.')
+    }
+  }
+
+
 
   return (
     <div className="w-60 bg-gray-900 text-white p-4 space-y-4 overflow-y-auto">
@@ -528,14 +846,68 @@ const Sidebar: React.FC = observer(() => {
         >
           Browser
         </button>
+        <button
+          className="w-full p-2 bg-gray-700 rounded hover:bg-blue-600"
+          onClick={() => setShowKategorieForm((prev) => !prev)}
+        >
+          Kategorie
+        </button>
       </div>
 
       {view === 'suche' && (
-   <SucheView
-   values={sucheValues}
-   onChange={setSucheValues}
-   onSearch={handleSearch}
- />
+        <SucheView
+          values={sucheValues}
+          onChange={setSucheValues}
+          onSearch={handleSearch}
+        />
+      )}
+
+      {showKategorieForm && (
+        <div className="mt-4">
+          <KategorieForm
+  kategorien={kategorien}
+  onSave={(data, isUpdate) => {
+    if (isUpdate) {
+      // PUT
+      fetch(`http://localhost:5001/api/kategorien/${data.NR}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+        .then((res) => res.json())
+        .then(async (res) => {
+          if (res.error) {
+            alert(`Fehler: ${res.error}`)
+            return
+          }
+          await kategorieStore.loadKategorien()
+          setShowKategorieForm(false)
+        })
+        .catch(() => alert("Fehler beim Update"))
+    } else {
+      // POST
+      fetch('http://localhost:5001/api/kategorien', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+        .then((res) => res.json())
+        .then(async (res) => {
+          if (res.error) {
+            alert(`Fehler: ${res.error}`)
+            return
+          }
+          await kategorieStore.loadKategorien()
+          setShowKategorieForm(false)
+        })
+        .catch(() => alert("Fehler beim Speichern"))
+    }
+  }}
+  onSearch={(filter) => {
+    console.log("Suche nicht implementiert in Sidebar:", filter)
+  }}
+/>
+        </div>
       )}
     </div>
   )
@@ -554,6 +926,7 @@ export default function Navigation() {
     { to: '/bilder', label: 'Bildverwaltung' },
     { to: '/abfragen', label: 'Abfragen' },
     { to: '/personen', label: 'Personen' },
+    { to: '/kategorien', label: 'Kategorien' }
   ]
 
   return (
@@ -810,6 +1183,8 @@ export default BrowserView
 import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { useStore } from "../store/StoreContext"
+// Importiere Hilfsfunktion zur Datumshandhabung
+import { format, addYears, subYears, subDays, addDays } from 'date-fns'
 import KategorieCombobox from '../components/KategorieCombobox'
 
 interface Props {
@@ -844,6 +1219,47 @@ function SucheView({ values, onChange, onSearch }: Props) {
     `w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 ${
       val ? 'text-white' : 'text-gray-400 italic'
     }`
+
+    const updateDatum = (newVon: Date, newBis: Date) => {
+      onChange({
+        ...values,
+        von: format(newVon, 'yyyy-MM-dd'),
+        bis: format(newBis, 'yyyy-MM-dd'),
+      })
+    }
+  
+    const handleJahrPlus = () => {
+      const vonDate = new Date(values.von)
+      const bisDate = new Date(values.bis)
+      updateDatum(addYears(vonDate, 1), addYears(bisDate, 1))
+    }
+  
+    const handleJahrMinus = () => {
+      const vonDate = new Date(values.von)
+      const bisDate = new Date(values.bis)
+      updateDatum(subYears(vonDate, 1), subYears(bisDate, 1))
+    }
+  
+    const handleLetztesJahr = () => {
+      const heute = new Date()
+      const vorEinemJahr = subYears(heute, 1)
+      updateDatum(vorEinemJahr, heute)
+    }
+  
+    const handleHeute = () => {
+      const heute = new Date()
+      const morgen = addDays(heute, 1)
+      updateDatum(heute, morgen)
+    }
+
+    const handleMax = () => {
+      const heute = new Date()
+      const damals = subYears(heute, 100)
+      updateDatum(damals, heute)
+    }
+
+
+
 
   return (
     <form
@@ -884,6 +1300,54 @@ function SucheView({ values, onChange, onSearch }: Props) {
           className={inputStyle(values.bis)}
         />
       </div>
+
+
+{/* Aktionsbuttons für Datum */}
+
+{/* Aktionsbuttons für Datum */}
+<div className="flex flex-wrap gap-1">
+  <button
+    type="button"
+    title="Beide Datumsfelder um ein Jahr rückwärts"
+    onClick={handleJahrMinus}
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    J-
+  </button>
+  <button
+    type="button"
+    title="Beide Datumsfelder um ein Jahr vor"
+    onClick={handleJahrPlus}
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    J+
+  </button>
+  <button
+    type="button"
+    onClick={handleLetztesJahr}
+    title="Ein Jahr ab heute rückwärts"
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    J
+  </button>
+  <button
+    type="button"
+     title="Heute"
+    onClick={handleHeute}
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    H
+  </button>
+  <button
+    type="button"
+   
+    onClick={handleMax}
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    Max
+  </button>
+</div>
+
 
       {/* Medientyp */}
       <select
@@ -976,6 +1440,114 @@ function SucheView({ values, onChange, onSearch }: Props) {
 }
 
 export default observer(SucheView)
+
+
+===== /Users/rolf/Documents/Programierung/React/bild-frontend/src/views/KategorieManagerView.tsx =====
+import { useState } from 'react'
+import { observer } from 'mobx-react-lite'
+import { useStore } from '../store/StoreContext'
+import KategorieForm from '../components/KategorieForm'
+import DatensatzNavigator from '../components/DatensatzNavigation'
+
+type Kategorie = {
+  id: number
+  bezeichnung: string
+  kattyp: string
+  ober: number | null
+  hidden: number
+  beschreibung?: string
+}
+
+const KategorieManagerView: React.FC = observer(() => {
+  const { kategorieStore } = useStore()
+
+  const [treffer, setTreffer] = useState<Kategorie[]>([])
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+
+  const handleSearch = (filter: Partial<Kategorie>) => {
+    const results = kategorieStore.kategorien.filter((k) => {
+      return (
+        (!filter.bezeichnung ||
+          k.bezeichnung.toLowerCase().includes(filter.bezeichnung.toLowerCase())) &&
+        (!filter.kattyp || k.kattyp === filter.kattyp) &&
+        (filter.ober === undefined || k.ober === filter.ober) &&
+        (filter.hidden === undefined || k.hidden === filter.hidden)
+      )
+    })
+    setTreffer(results)
+    setActiveIndex(results.length > 0 ? 0 : null)
+  }
+
+  const handleSave = async (data: any, isUpdate: boolean) => {
+    const url = isUpdate
+      ? `http://localhost:5001/api/kategorien/${data.NR}`
+      : `http://localhost:5001/api/kategorien`
+
+    const res = await fetch(url, {
+      method: isUpdate ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+
+    const result = await res.json()
+
+    if (!res.ok) {
+      alert(`Fehler: ${result.error}`)
+      return
+    }
+
+    // Kategorien neu laden
+    await kategorieStore.loadKategorien()
+
+    // Neue Suche mit aktuellem Eintrag (optional)
+    handleSearch({ bezeichnung: data.BEZEICHNUNG })
+
+    alert(isUpdate ? 'Kategorie aktualisiert' : 'Kategorie gespeichert')
+  }
+
+  const activeData = activeIndex !== null ? treffer[activeIndex] : undefined
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-bold text-gray-800">Kategorien verwalten</h2>
+
+      <KategorieForm
+        kategorien={kategorieStore.kategorien}
+        onSearch={handleSearch}
+        onSave={handleSave}
+        initialData={
+          activeData
+            ? {
+                NR: activeData.id,
+                BEZEICHNUNG: activeData.bezeichnung,
+                KATTYP: activeData.kattyp,
+                OBER: activeData.ober,
+                BESCHREIBUNG: activeData.beschreibung ?? '',
+                hidden: activeData.hidden,
+              }
+            : undefined
+        }
+      />
+
+      {treffer.length > 0 && activeIndex !== null && (
+        <DatensatzNavigator
+          index={activeIndex}
+          total={treffer.length}
+          onPrev={() =>
+            setActiveIndex((i) => Math.max((i ?? 1) - 1, 0))
+          }
+          onNext={() =>
+            setActiveIndex((i) =>
+              Math.min((i ?? 0) + 1, treffer.length - 1)
+            )
+          }
+        />
+      )}
+    </div>
+  )
+})
+
+export default KategorieManagerView
 
 
 ===== /Users/rolf/Documents/Programierung/React/bild-frontend/src/views/SuchErgebnisseView.tsx =====
@@ -1159,9 +1731,14 @@ export const Bild = types.model({
   fotograf:types.string,
 })
 
+
+
 const Kategorie = types.model({
   id: types.identifierNumber,
-  name: types.string,
+  bezeichnung: types.string,
+  kattyp: types.string,
+  ober: types.maybeNull(types.number),
+  hidden: types.number,
 })
 
 const Kamera = types.model({
@@ -1308,7 +1885,18 @@ const KategorieStore = types
       try {
         const res = yield fetch("http://127.0.0.1:5001/api/kategorien")
         const data = yield res.json()
-        self.kategorien = data
+       // self.kategorien = data
+
+        self.kategorien = cast(
+          data.map((item: any) => ({
+            id: Number(item.id),
+            bezeichnung: item.bezeichnung ?? '',
+            kattyp: item.kattyp ?? '',
+            ober: item.ober ?? null,
+            hidden: item.hidden ?? 0,
+          }))
+        )
+
         self.loading = false
       } catch (err: any) {
         self.error = err.message

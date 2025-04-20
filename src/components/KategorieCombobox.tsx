@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 
 type Kategorie = {
   id: number
-  name: string
+  bezeichnung: string
 }
 
 export default function KategorieCombobox({
@@ -31,7 +31,7 @@ export default function KategorieCombobox({
       ? kategorien.slice(0, 50) // Max 50 bei leerer Eingabe
       : kategorien
           .filter((kat) =>
-            kat.name.toLowerCase().includes(debouncedQuery.toLowerCase())
+            kat.bezeichnung.toLowerCase().includes(debouncedQuery.toLowerCase())
           )
           .slice(0, 50) // Max 50 auch bei Suche
 
@@ -41,7 +41,7 @@ export default function KategorieCombobox({
         <Combobox.Input
           onChange={(event) => setQuery(event.target.value)}
           displayValue={(val: string) =>
-            kategorien.find((k) => k.id.toString() === val)?.name || ''
+            kategorien.find((k) => k.id.toString() === val)?.bezeichnung || ''
           }
           className="w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 text-white placeholder-white"
           placeholder="Kategorie wählen"
@@ -60,7 +60,7 @@ export default function KategorieCombobox({
                 }`
               }
             >
-              {kat.name}
+              {kat.bezeichnung}
             </Combobox.Option>
           ))}
         </Combobox.Options>

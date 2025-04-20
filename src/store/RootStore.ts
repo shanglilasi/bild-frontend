@@ -24,9 +24,14 @@ export const Bild = types.model({
   fotograf:types.string,
 })
 
+
+
 const Kategorie = types.model({
   id: types.identifierNumber,
-  name: types.string,
+  bezeichnung: types.string,
+  kattyp: types.string,
+  ober: types.maybeNull(types.number),
+  hidden: types.number,
 })
 
 const Kamera = types.model({
@@ -173,7 +178,18 @@ const KategorieStore = types
       try {
         const res = yield fetch("http://127.0.0.1:5001/api/kategorien")
         const data = yield res.json()
-        self.kategorien = data
+       // self.kategorien = data
+
+        self.kategorien = cast(
+          data.map((item: any) => ({
+            id: Number(item.id),
+            bezeichnung: item.bezeichnung ?? '',
+            kattyp: item.kattyp ?? '',
+            ober: item.ober ?? null,
+            hidden: item.hidden ?? 0,
+          }))
+        )
+
         self.loading = false
       } catch (err: any) {
         self.error = err.message

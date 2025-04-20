@@ -3,6 +3,8 @@
 import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { useStore } from "../store/StoreContext"
+// Importiere Hilfsfunktion zur Datumshandhabung
+import { format, addYears, subYears, subDays, addDays } from 'date-fns'
 import KategorieCombobox from '../components/KategorieCombobox'
 
 interface Props {
@@ -37,6 +39,47 @@ function SucheView({ values, onChange, onSearch }: Props) {
     `w-full border border-gray-600 rounded px-2 py-1 bg-gray-800 ${
       val ? 'text-white' : 'text-gray-400 italic'
     }`
+
+    const updateDatum = (newVon: Date, newBis: Date) => {
+      onChange({
+        ...values,
+        von: format(newVon, 'yyyy-MM-dd'),
+        bis: format(newBis, 'yyyy-MM-dd'),
+      })
+    }
+  
+    const handleJahrPlus = () => {
+      const vonDate = new Date(values.von)
+      const bisDate = new Date(values.bis)
+      updateDatum(addYears(vonDate, 1), addYears(bisDate, 1))
+    }
+  
+    const handleJahrMinus = () => {
+      const vonDate = new Date(values.von)
+      const bisDate = new Date(values.bis)
+      updateDatum(subYears(vonDate, 1), subYears(bisDate, 1))
+    }
+  
+    const handleLetztesJahr = () => {
+      const heute = new Date()
+      const vorEinemJahr = subYears(heute, 1)
+      updateDatum(vorEinemJahr, heute)
+    }
+  
+    const handleHeute = () => {
+      const heute = new Date()
+      const morgen = addDays(heute, 1)
+      updateDatum(heute, morgen)
+    }
+
+    const handleMax = () => {
+      const heute = new Date()
+      const damals = subYears(heute, 100)
+      updateDatum(damals, heute)
+    }
+
+
+
 
   return (
     <form
@@ -77,6 +120,54 @@ function SucheView({ values, onChange, onSearch }: Props) {
           className={inputStyle(values.bis)}
         />
       </div>
+
+
+{/* Aktionsbuttons für Datum */}
+
+{/* Aktionsbuttons für Datum */}
+<div className="flex flex-wrap gap-1">
+  <button
+    type="button"
+    title="Beide Datumsfelder um ein Jahr rückwärts"
+    onClick={handleJahrMinus}
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    J-
+  </button>
+  <button
+    type="button"
+    title="Beide Datumsfelder um ein Jahr vor"
+    onClick={handleJahrPlus}
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    J+
+  </button>
+  <button
+    type="button"
+    onClick={handleLetztesJahr}
+    title="Ein Jahr ab heute rückwärts"
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    J
+  </button>
+  <button
+    type="button"
+     title="Heute"
+    onClick={handleHeute}
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    H
+  </button>
+  <button
+    type="button"
+   
+    onClick={handleMax}
+    className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-700"
+  >
+    Max
+  </button>
+</div>
+
 
       {/* Medientyp */}
       <select
