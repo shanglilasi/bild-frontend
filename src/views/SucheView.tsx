@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { useStore } from "../store/StoreContext"
 // Importiere Hilfsfunktion zur Datumshandhabung
-import { format, addYears, subYears, subDays, addDays } from 'date-fns'
+import { format, addYears, subYears, addDays } from 'date-fns'
 import KategorieCombobox from '../components/KategorieCombobox'
 
 interface Props {

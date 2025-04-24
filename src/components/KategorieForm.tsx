@@ -9,7 +9,7 @@ type Kategorie = {
   bezeichnung: string
   kattyp: string
   beschreibung: string
-  ober: number
+  ober: number | null
   hidden: number
 }
 

@@ -1,9 +1,9 @@
-//components/BildBeschreibungModal.tsx
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "../store/StoreContext"
 import KategorieCombobox from "./KategorieCombobox"
 import type { BildData } from "../types/Bild"
-
+import ExifInfo from "./ExifInfo"
+import LlmInfo from "./LlmInfo"
 export default function BildBeschreibungModal({
   nr,
   onClose,
@@ -19,7 +19,9 @@ export default function BildBeschreibungModal({
   const [isSaving, setIsSaving] = useState(false)
   const [refreshNeeded, setRefreshNeeded] = useState(false)
   const [lastPicInfo, setLastPicInfo] = useState<{ NR: number; info: string } | null>(null)
-
+  const [navigationMode, setNavigationMode] = useState<'Aufnahmedatum' | 'nr'>('Aufnahmedatum')
+  const [isChronoActive, setIsChronoActive] = useState(false)
+  const [ansichtModus, setAnsichtModus] = useState<"normal" | "exif" | "llm">("normal")
   const modalRef = useRef<HTMLDivElement>(null)
 
   const handleKategorieHinzufuegen = async (katId: string | number) => {
@@ -27,7 +29,9 @@ export default function BildBeschreibungModal({
       await fetch(`http://127.0.0.1:5001/addKat/${bild?.NR}/${katId}`, {
         method: "POST",
       })
-      await reloadKategorien()
+      if (bild?.NR) {
+        await reloadKategorien(bild.NR)
+      }
       setRefreshNeeded(true)
     } catch (err) {
       console.error("Fehler beim Hinzufügen:", err)
@@ -46,59 +50,93 @@ export default function BildBeschreibungModal({
     }
   }
 
-  const reloadKategorien = async () => {
-    const res = await fetch(`http://127.0.0.1:5001/holeKatZuBild/${nr}`)
+  const reloadKategorien = async (bildNr: number) => {
+    const res = await fetch(`http://127.0.0.1:5001/holeKatZuBild/${bildNr}`)
     const data = await res.json()
     setKategorien(data)
   }
 
-  useEffect(() => {
-    const loadBild = async () => {
-      const res = await fetch(`http://127.0.0.1:5001/api/bild/${nr}`)
+  const loadBild = async (nummer: number) => {
+    const res = await fetch(`http://127.0.0.1:5001/api/bild/${nummer}`)
+    const data = await res.json()
+    const url = `http://127.0.0.1:5001/images/${data.bild.pfad}/${data.bild.datei}`
+    const loaded: BildData = {
+      NR: data.bild.NR,
+      titel: data.bild.titel ?? '',
+      datum: data.bild.AUFNAHMEDATUM ?? '',
+      kamera: data.bild.kamera ?? '',
+      typ: data.bild.typ ?? '',
+      url,
+      kategorie: data.bild.kategorie ?? '',
+      fotograf: data.bild.fotograf ?? '',
+    }
+
+    setBild(loaded)
+    setOriginalBild(loaded)
+  }
+
+  const fetchVorschlaege = async () => {
+    try {
+      const res = await fetch(`http://127.0.0.1:5001/propKat/${bild?.NR}/10`)
       const data = await res.json()
-      const url = `http://127.0.0.1:5001/images/${data.bild.pfad}/${data.bild.datei}`
+      setVorgeschlageneKategorien(data)
+    } catch (err) {
+      console.error("Fehler beim Laden der Vorschläge:", err)
+    }
+  }
+
+  const fetchLastPicInfo = async () => {
+    try {
+      const res = await fetch(`http://127.0.0.1:5001/lastPicInfo/${nr}`)
+      const data = await res.json()
+      setLastPicInfo(data.bild)
+    } catch (err) {
+      console.error("Fehler beim Laden des vorherigen Bildes:", err)
+    }
+  }
+
+  const handleChronoNavigation = async (direction: 'prev' | 'next') => {
+    if (!bild) return
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:5001/api/chrono/${navigationMode}/${bild.NR}/${direction}`
+      )
+      const data = await res.json()
+      if (!data?.NR) {
+        alert("Kein weiteres Bild gefunden.")
+        return
+      }
+
+      const url = `http://127.0.0.1:5001/images/${data.pfad}/${data.datei}`
       const loaded: BildData = {
-        NR: data.bild.NR,
-        titel: data.bild.titel ?? '',
-        datum: data.bild.AUFNAHMEDATUM ?? '',
-        kamera: data.bild.kamera ?? '',
-        typ: data.bild.typ ?? '',
+        NR: data.NR,
+        titel: data.titel ?? '',
+        datum: data.AUFNAHMEDATUM ?? '',
+        kamera: data.kamera ?? '',
+        typ: data.typ ?? '',
         url,
-        kategorie: data.bild.kategorie ?? '',
-        fotograf: data.bild.fotograf ?? '',
+        kategorie: data.kategorie ?? '',
+        fotograf: data.fotograf ?? '',
       }
 
       setBild(loaded)
       setOriginalBild(loaded)
-    }
+      setRefreshNeeded(true)
 
-    const fetchVorschlaege = async () => {
-      try {
-        const res = await fetch(`http://127.0.0.1:5001/propKat/${nr}/10`)
-        const data = await res.json()
-        setVorgeschlageneKategorien(data)
-      } catch (err) {
-        console.error("Fehler beim Laden der Vorschläge:", err)
-      }
-    }
+      // Kategorien + Vorschläge neu laden
+      await reloadKategorien(data.NR)
+      await fetchVorschlaege()
 
-    const fetchLastPicInfo = async () => {
-      try {
-        const res = await fetch(`http://127.0.0.1:5001/lastPicInfo/${nr}`)
-        const data = await res.json()
-        setLastPicInfo(data.bild)
-      } catch (err) {
-        console.error("Fehler beim Laden des vorherigen Bildes:", err)
-      }
+    } catch (err) {
+      console.error("Fehler bei der Chrono-Navigation:", err)
     }
-
-    loadBild()
-    fetchVorschlaege()
-    fetchLastPicInfo()
-  }, [nr])
+  }
 
   useEffect(() => {
-    reloadKategorien()
+    loadBild(nr)
+    reloadKategorien(nr) // <--- DAS FEHLTE!
+    fetchVorschlaege()
+    fetchLastPicInfo()
   }, [nr])
 
   const handleChange = (field: keyof BildData, value: string) => {
@@ -139,9 +177,13 @@ export default function BildBeschreibungModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cleanBild),
       })
+
       if (!res.ok) throw new Error("Fehler beim Speichern")
 
-      suchStore.updateBild(cleanBild)
+      const isTreffer = suchStore.results.some((b) => b.NR === cleanBild.NR)
+      if (isTreffer) {
+        suchStore.updateBild(cleanBild)
+      }
 
       onClose(true)
     } catch (err) {
@@ -175,17 +217,8 @@ export default function BildBeschreibungModal({
       })
       if (!res.ok) throw new Error("Fehler beim Übernehmen")
 
-      // Bilddaten aktualisieren
-      await reloadKategorien()
-      const newBildRes = await fetch(`http://127.0.0.1:5001/api/bild/${nr}`)
-      const newData = await newBildRes.json()
-      const url = `http://127.0.0.1:5001/images/${newData.bild.pfad}/${newData.bild.datei}`
-      setBild({
-        ...bild!,
-        ...newData.bild,
-        url,
-      })
-
+      await reloadKategorien(lastPicInfo.NR)
+      await loadBild(lastPicInfo.NR)
       setRefreshNeeded(true)
     } catch (err) {
       console.error("Fehler beim Übernehmen vom vorherigen Bild:", err)
@@ -194,32 +227,112 @@ export default function BildBeschreibungModal({
 
   if (!bild) return null
 
+  const isSuchTreffer = suchStore.results.some(b => b.NR === bild.NR)
+
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-start justify-center z-[1000] pt-10"
       onClick={handleBackgroundClick}
     >
       <div
         ref={modalRef}
-        className="bg-white p-6 rounded shadow-lg max-w-xl w-full relative space-y-4"
+        className="bg-white p-6 rounded shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <img src={bild.url} alt={bild.titel} className="rounded max-w-full" />
+     {(isChronoActive || isSuchTreffer) && (
+  <div className="flex items-center justify-between gap-4 mt-2 text-sm w-full">
+    
+    {/* Zurück-Button */}
+    {isChronoActive ? (
+      <button
+        onClick={() => handleChronoNavigation('prev')}
+        className="bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded whitespace-nowrap"
+      >
+        ◀ Vorheriges
+      </button>
+    ) : (
+      <div className="w-[120px]" /> // Platzhalter wenn der Button fehlt
+    )}
 
-        {/* Titel */}
+    {/* Mittlerer Block: Checkbox + Select */}
+    <div className="flex items-center gap-4">
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={isChronoActive}
+          onChange={(e) => setIsChronoActive(e.target.checked)}
+        />
+        Chronologische Navigation 
+      </label>
+
+      {isChronoActive && (
+        <select
+          value={navigationMode}
+          onChange={(e) =>
+            setNavigationMode(e.target.value as 'Aufnahmedatum' | 'nr')
+          }
+          className="border px-2 py-1 text-sm rounded"
+        >
+          <option value="Aufnahmedatum">Aufnahmedatum</option>
+          <option value="NR">Bildnummer</option>
+        </select>
+      )}
+
+      {isSuchTreffer && (
+        <div className="text-xs text-gray-500 italic">
+          (Teil der aktuellen Suchergebnisse)
+        </div>
+      )}
+    </div>
+
+    {/* Vor-Button */}
+    {isChronoActive ? (
+      <button
+        onClick={() => handleChronoNavigation('next')}
+        className="bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded whitespace-nowrap"
+      >
+        Nächstes ▶
+      </button>
+    ) : (
+      <div className="w-[120px]" /> // Platzhalter wenn der Button fehlt
+    )}
+  </div>
+)}
+  {/* Bildanzeige – passt sich Quer- und Hochformat korrekt an */}
+<div className="w-full max-w-3xl mx-auto bg-gray-100 flex items-center justify-center overflow-hidden rounded">
+
+<img
+  src={bild.url}
+  alt={bild.titel}
+  onClick={() => {
+    setAnsichtModus((prev) =>
+      prev === "normal" ? "exif" : prev === "exif" ? "llm" : "normal"
+    )
+  }}
+  className="w-full h-auto max-h-[768px] object-contain cursor-pointer"
+/>
+
+
+
+</div>
+{/* Zusatzinfos: EXIF oder LLM */}
+{ansichtModus === "exif" && <><br></br><ExifInfo bildNr={bild.NR} /></>}
+{ansichtModus === "llm" && <><br></br><LlmInfo bildNr={bild.NR} /></>}
+
+
+        {/* Eingabefelder */}
         <div className="flex items-start gap-2">
-          <label className="w-24 shrink-0 font-medium pt-1">Titel:</label>
+          <label className="w-24 font-medium pt-1">Titel:</label>
           <textarea
-            className="w-full border px-2 py-1 rounded resize-none"
+            className="w-full border px-2 py-1 rounded resize-none text-sm"
             rows={3}
             value={bild.titel}
             onChange={(e) => handleChange("titel", e.target.value)}
           />
         </div>
 
-        {/* Fotograf */}
         <div className="flex items-center gap-2">
-          <label className="w-24 shrink-0 font-medium">Fotograf:</label>
+          <label className="w-24 font-medium">Fotograf:</label>
           <input
             className="flex-1 border px-2 py-1 rounded"
             value={bild.fotograf}
@@ -227,19 +340,21 @@ export default function BildBeschreibungModal({
           />
         </div>
 
-        {/* Kamera */}
         <div className="flex items-center gap-2">
-          <label className="w-24 shrink-0 font-medium">Kamera:</label>
+          <label className="w-24 font-medium">Kamera:</label>
           <input
             className="flex-1 border px-2 py-1 rounded"
             value={bild.kamera}
             onChange={(e) => handleChange("kamera", e.target.value)}
           />
         </div>
-
-        {/* Zugewiesene Kategorien */}
+        <div className="text-xs text-gray-500 italic">
+        {bild?.url && bild.url.split('/images/')[1]?.replace(/\\/g, '/').replace(/\/+/g, '/')}
+</div>
+       
+        {/* Kategorien */}
         {kategorien.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2 max-h-24 overflow-auto text-xs">
+          <div className="flex flex-wrap gap-2 max-h-24 overflow-auto text-xs">
             {kategorien.map((kat) => (
               <span
                 key={kat.id}
@@ -253,9 +368,8 @@ export default function BildBeschreibungModal({
           </div>
         )}
 
-        {/* Kategorie-Combobox */}
         <div className="flex items-center gap-2">
-          <label className="w-24 shrink-0 font-medium">weitere Kategorien zuordnen:</label>
+          <label className="w-24 font-medium">weitere Kategorien:</label>
           <KategorieCombobox
             kategorien={kategorieStore.kategorien}
             selected={""}
@@ -263,30 +377,26 @@ export default function BildBeschreibungModal({
           />
         </div>
 
-        {/* Vorgeschlagene Kategorien */}
+        {/* Vorschläge */}
         {vorgeschlageneKategorien.length > 0 && (
-          <div className="mt-2 text-sm">
-            <div className="flex flex-wrap gap-2 text-xs">
-              {vorgeschlageneKategorien.map((kat) => (
-                <span
-                  key={kat.id}
-                  onDoubleClick={async () => {
-                    await handleKategorieHinzufuegen(kat.id)
-                    setVorgeschlageneKategorien((prev) =>
-                      prev.filter((k) => k.id !== kat.id)
-                    )
-                  }}
-                  className="bg-gray-100 text-gray-800 px-2 py-1 rounded cursor-pointer hover:bg-green-100"
-                  title={kat.beschreibung || ""}
-                >
-                  {kat.bezeichnung}
-                </span>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-2 text-xs">
+            {vorgeschlageneKategorien.map((kat) => (
+              <span
+                key={kat.id}
+                onDoubleClick={async () => {
+                  await handleKategorieHinzufuegen(kat.id)
+                  setVorgeschlageneKategorien((prev) => prev.filter((k) => k.id !== kat.id))
+                }}
+                className="bg-gray-100 text-gray-800 px-2 py-1 rounded cursor-pointer hover:bg-green-100"
+                title={kat.beschreibung || ""}
+              >
+                {kat.bezeichnung}
+              </span>
+            ))}
           </div>
         )}
 
-        {/* Übernehmen von vorherigem Bild */}
+        {/* Übernehmen vom vorherigen Bild */}
         {lastPicInfo && (
           <div
             className="bg-yellow-100 border border-yellow-400 rounded px-3 py-2 text-sm cursor-pointer hover:bg-yellow-200 relative group select-none"
@@ -300,7 +410,7 @@ export default function BildBeschreibungModal({
           </div>
         )}
 
-        {/* Buttons */}
+        {/* Aktionen */}
         <div className="flex gap-2 pt-2">
           <button
             onClick={handleSave}
@@ -316,6 +426,8 @@ export default function BildBeschreibungModal({
             Abbrechen
           </button>
         </div>
+
+
       </div>
     </div>
   )

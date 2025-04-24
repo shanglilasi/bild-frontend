@@ -16,7 +16,7 @@ type Props = {
 
 const KategorieListe: React.FC<Props> = ({ kategorien }) => {
   // Rekursive Funktion zum Aufbauen der Struktur
-  const renderKategorieTree = (oberId: number | null = 0, level: number = 0): JSX.Element[] => {
+  const renderKategorieTree = (oberId: number | null = 0, level: number = 0): React.ReactElement[] => {
     return kategorien
       .filter((kat) => kat.ober === oberId)
       .map((kat) => (
