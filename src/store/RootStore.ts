@@ -42,7 +42,7 @@ const Kamera = types.model({
 const Fotograf = types.model({
   name: types.string,
 })
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // 🔧 Backend → Frontend Mapping
 function transformBackendBild(item: any): BildData {
   const pfad = (item.pfad ?? '').replace(/\\/g, '/').replace(/\/+/g, '/')
@@ -55,7 +55,7 @@ function transformBackendBild(item: any): BildData {
     kamera: item.kamera ?? '',
     typ: item.typ ?? '',
     url: pfad && datei
-    ? `http://127.0.0.1:5001/images/${pfad}/${datei}`
+    ? `${BASE_URL}/utils/images/${pfad}/${datei}`
     : '',
     kategorie: item.kategorie ?? '',
     fotograf: item.fotograf ?? '',
@@ -118,7 +118,7 @@ const SuchStore = types
 
     search: flow(function* (values) {
       try {
-        const res = yield fetch("http://127.0.0.1:5001/api/bilder", {
+        const res = yield fetch(`${BASE_URL}/bilder/bilder`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -177,7 +177,7 @@ const KategorieStore = types
       self.loading = true
       self.error = null
       try {
-        const res = yield fetch("http://127.0.0.1:5001/api/kategorien")
+        const res = yield fetch(`${BASE_URL}/kategorien/kategorien`)
         const data = yield res.json()
        // self.kategorien = data
 
@@ -203,7 +203,7 @@ const KategorieStore = types
       self.kamerasLoading = true
       self.kamerasError = null
       try {
-        const res = yield fetch("http://127.0.0.1:5001/api/kamera")
+        const res = yield fetch(`${BASE_URL}/utils/kamera`)
         const data = yield res.json()
         self.kameras = data
         self.kamerasLoading = false
@@ -216,7 +216,7 @@ const KategorieStore = types
       self.fotografenLoading = true
       self.fotografenError = null
       try {
-        const res = yield fetch("http://127.0.0.1:5001/api/fotografen")
+        const res = yield fetch(`${BASE_URL}/utils/fotografen`)
         const data = yield res.json()
         self.fotografen = data
         self.fotografenLoading = false

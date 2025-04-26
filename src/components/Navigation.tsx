@@ -4,8 +4,8 @@ export default function Navigation() {
   const location = useLocation()
 
   const navLinks = [
-    { to: '/bilder', label: 'Bildverwaltung' },
-    { to: '/abfragen', label: 'Abfragen' },
+    { to: '/bilder', label: 'Bilder' },
+    { to: '/abfragen', label: 'Verwalten' },
 
 
   ]

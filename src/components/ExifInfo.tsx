@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function ExifInfo({ bildNr }: { bildNr: number }) {
   const [exif, setExif] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -8,7 +8,7 @@ export default function ExifInfo({ bildNr }: { bildNr: number }) {
   useEffect(() => {
     const loadExif = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:5001/api/holeExif/${bildNr}`)
+        const res = await fetch(`${BASE_URL}/exif/holeExif/${bildNr}`)
         const data = await res.json()
         setExif(data)
       } catch (err) {

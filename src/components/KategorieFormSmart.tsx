@@ -32,8 +32,8 @@ export default function KategorieFormSmart() {
 
   const handleSave = async (data: any, isUpdate: boolean) => {
     const url = isUpdate
-      ? `http://localhost:5001/api/kategorien/${data.NR}`
-      : `http://localhost:5001/api/kategorien`
+      ? `http://localhost:5001/kategorie/kategorien/${data.NR}`
+      : `http://localhost:5001/kategorie/kategorien`
 
     const res = await fetch(url, {
       method: isUpdate ? 'PUT' : 'POST',

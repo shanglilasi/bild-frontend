@@ -1,9 +1,15 @@
+//components/BildBeschreibungModal
+
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "../store/StoreContext"
 import KategorieCombobox from "./KategorieCombobox"
 import type { BildData } from "../types/Bild"
 import ExifInfo from "./ExifInfo"
 import LlmInfo from "./LlmInfo"
+import { BildLink } from "./BildLink"
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function BildBeschreibungModal({
   nr,
   onClose,
@@ -23,10 +29,10 @@ export default function BildBeschreibungModal({
   const [isChronoActive, setIsChronoActive] = useState(false)
   const [ansichtModus, setAnsichtModus] = useState<"normal" | "exif" | "llm">("normal")
   const modalRef = useRef<HTMLDivElement>(null)
-
+  
   const handleKategorieHinzufuegen = async (katId: string | number) => {
     try {
-      await fetch(`http://127.0.0.1:5001/addKat/${bild?.NR}/${katId}`, {
+      await fetch(`${BASE_URL}/bilder/addKat/${bild?.NR}/${katId}`, {
         method: "POST",
       })
       if (bild?.NR) {
@@ -40,10 +46,10 @@ export default function BildBeschreibungModal({
 
   const handleKategorieEntfernen = async (katId: number) => {
     try {
-      await fetch(`http://127.0.0.1:5001/remKat/${bild?.NR}/${katId}`, {
+      await fetch(`${BASE_URL}/bilder/remKat/${bild?.NR}/${katId}`, {
         method: "DELETE",
       })
-      await reloadKategorien()
+      await reloadKategorien(nr)
       setRefreshNeeded(true)
     } catch (err) {
       console.error("Fehler beim Entfernen:", err)
@@ -51,15 +57,15 @@ export default function BildBeschreibungModal({
   }
 
   const reloadKategorien = async (bildNr: number) => {
-    const res = await fetch(`http://127.0.0.1:5001/holeKatZuBild/${bildNr}`)
+    const res = await fetch(`${BASE_URL}/bilder/holeKatZuBild/${bildNr}`)
     const data = await res.json()
     setKategorien(data)
   }
 
   const loadBild = async (nummer: number) => {
-    const res = await fetch(`http://127.0.0.1:5001/api/bild/${nummer}`)
+    const res = await fetch(`${BASE_URL}/bilder/bild/${nummer}`)
     const data = await res.json()
-    const url = `http://127.0.0.1:5001/images/${data.bild.pfad}/${data.bild.datei}`
+    const url = `${BASE_URL}/utils/images/${data.bild.pfad}/${data.bild.datei}`
     const loaded: BildData = {
       NR: data.bild.NR,
       titel: data.bild.titel ?? '',
@@ -77,7 +83,7 @@ export default function BildBeschreibungModal({
 
   const fetchVorschlaege = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:5001/propKat/${bild?.NR}/10`)
+      const res = await fetch(`${BASE_URL}/bilder/propKat/${bild?.NR}/10`)
       const data = await res.json()
       setVorgeschlageneKategorien(data)
     } catch (err) {
@@ -87,7 +93,7 @@ export default function BildBeschreibungModal({
 
   const fetchLastPicInfo = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:5001/lastPicInfo/${nr}`)
+      const res = await fetch(`${BASE_URL}/bilder/lastPicInfo/${nr}`)
       const data = await res.json()
       setLastPicInfo(data.bild)
     } catch (err) {
@@ -99,7 +105,7 @@ export default function BildBeschreibungModal({
     if (!bild) return
     try {
       const res = await fetch(
-        `http://127.0.0.1:5001/api/chrono/${navigationMode}/${bild.NR}/${direction}`
+        `${BASE_URL}/bilder/chrono/${navigationMode}/${bild.NR}/${direction}`
       )
       const data = await res.json()
       if (!data?.NR) {
@@ -107,7 +113,7 @@ export default function BildBeschreibungModal({
         return
       }
 
-      const url = `http://127.0.0.1:5001/images/${data.pfad}/${data.datei}`
+      const url = `${BASE_URL}/utils/images/${data.pfad}/${data.datei}`
       const loaded: BildData = {
         NR: data.NR,
         titel: data.titel ?? '',
@@ -172,7 +178,7 @@ export default function BildBeschreibungModal({
         typ: bild.typ || "",
       }
 
-      const res = await fetch(`http://127.0.0.1:5001/api/bild/${cleanBild.NR}`, {
+      const res = await fetch(`${BASE_URL}/bilder/bild/${cleanBild.NR}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cleanBild),
@@ -212,7 +218,7 @@ export default function BildBeschreibungModal({
     if (!lastPicInfo) return
 
     try {
-      const res = await fetch(`http://127.0.0.1:5001/api/sameAsPic/${nr}/${lastPicInfo.NR}`, {
+      const res = await fetch(`${BASE_URL}/bilder/sameAsPic/${nr}/${lastPicInfo.NR}`, {
         method: "POST",
       })
       if (!res.ok) throw new Error("Fehler beim Übernehmen")
@@ -224,6 +230,9 @@ export default function BildBeschreibungModal({
       console.error("Fehler beim Übernehmen vom vorherigen Bild:", err)
     }
   }
+
+  
+  
 
   if (!bild) return null
 
@@ -348,9 +357,9 @@ export default function BildBeschreibungModal({
             onChange={(e) => handleChange("kamera", e.target.value)}
           />
         </div>
-        <div className="text-xs text-gray-500 italic">
-        {bild?.url && bild.url.split('/images/')[1]?.replace(/\\/g, '/').replace(/\/+/g, '/')}
-</div>
+
+        <BildLink url={bild.url} />
+
        
         {/* Kategorien */}
         {kategorien.length > 0 && (
@@ -376,7 +385,7 @@ export default function BildBeschreibungModal({
             onChange={(val) => handleKategorieHinzufuegen(val)}
           />
         </div>
-
+        <hr></hr>
         {/* Vorschläge */}
         {vorgeschlageneKategorien.length > 0 && (
           <div className="flex flex-wrap gap-2 text-xs">
@@ -388,7 +397,7 @@ export default function BildBeschreibungModal({
                   setVorgeschlageneKategorien((prev) => prev.filter((k) => k.id !== kat.id))
                 }}
                 className="bg-gray-100 text-gray-800 px-2 py-1 rounded cursor-pointer hover:bg-green-100"
-                title={kat.beschreibung || ""}
+                title={kat.beschreibung}
               >
                 {kat.bezeichnung}
               </span>
@@ -396,17 +405,19 @@ export default function BildBeschreibungModal({
           </div>
         )}
 
+
         {/* Übernehmen vom vorherigen Bild */}
         {lastPicInfo && (
+
           <div
             className="bg-yellow-100 border border-yellow-400 rounded px-3 py-2 text-sm cursor-pointer hover:bg-yellow-200 relative group select-none"
-            title="Doppelklick zum Übernehmen"
             onDoubleClick={handleSameAsLastPic}
           >
             Übernehmen von vorherigem Bild
-            <div className="absolute left-0 bottom-full mb-1 w-max max-w-sm bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-              {lastPicInfo.info}
-            </div>
+            <div className="absolute left-0 bottom-full mb-1 w-max max-w-sm bg-gray-800 text-white text-xs rounded px-2 py-1 hidden group-hover:block transition-opacity z-10">
+  {lastPicInfo.info}
+</div>
+            
           </div>
         )}
 

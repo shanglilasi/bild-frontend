@@ -20,8 +20,7 @@ export default function PIC({ data }: { data: BildData }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const isVideo = data.url.endsWith(".mp4") || data.typ === "V"
   const [kategorien, setKategorien] = useState<Kategorie[]>([])
-
-
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -40,7 +39,7 @@ export default function PIC({ data }: { data: BildData }) {
 
   const fetchKategorien = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:5001/holeKatZuBild/${data.NR}`)
+      const res = await fetch(`${BASE_URL}/bilder/holeKatZuBild/${data.NR}`)
       const result = await res.json()
       setKategorien(result || [])
     } catch (err) {

@@ -126,13 +126,13 @@ export default function KategorieForm({
       alert("Keine Treffer gefunden.")
       return
     }
-
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
     const confirmed = window.confirm(`Allen ${treffer.length} Treffern die Kategorie "${kat.bezeichnung}" zuweisen?`)
     if (!confirmed) return
 
     try {
       const promises = treffer.map(bild =>
-        fetch(`http://127.0.0.1:5001/addKat/${bild.NR}/${kat.id}`, {
+        fetch(`${BASE_URL}/bilder/addKat/${bild.NR}/${kat.id}`, {
           method: "POST"
         })
       )

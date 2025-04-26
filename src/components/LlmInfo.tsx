@@ -1,15 +1,19 @@
+//components/LlmInfo.tsx
+
 import { useEffect, useState } from "react"
 import { Bot, Loader2 } from "lucide-react"
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function LlmInfo({ bildNr }: { bildNr: number }) {
-  const [info, setInfo] = useState<string>("")
+  const [info, setInfo] = useState<{ stichworte: string[] }>({ stichworte: [] })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadLLM = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:5001/api/holeLLM/${bildNr}`)
-        const text = await res.text()
+        const res = await fetch(`${BASE_URL}/llm/holeLLM/${bildNr}`)
+        const text = await res.json()
         setInfo(text)
       } catch (err) {
         console.error("Fehler beim Laden der LLM-Analyse:", err)
@@ -29,7 +33,7 @@ export default function LlmInfo({ bildNr }: { bildNr: number }) {
     )
   }
 
-  if (!info) {
+  if (!info.stichworte.length) {
     return <div className="text-sm text-gray-500 mt-2">Keine Analyse verfügbar.</div>
   }
 
@@ -38,7 +42,11 @@ export default function LlmInfo({ bildNr }: { bildNr: number }) {
       <div className="font-semibold mb-1 text-yellow-800 flex items-center gap-1">
         <Bot className="w-4 h-4" /> LLM-Bildanalyse
       </div>
-      <div className="whitespace-pre-wrap">{info}</div>
+      <div className="whitespace-pre-wrap">
+        {info.stichworte.map((wort, index) => (
+          <div key={index}>{wort}</div>
+        ))}
+      </div>
     </div>
   )
 }
