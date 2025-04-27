@@ -62,7 +62,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
 
   const fetchRelatedFiles = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/utils/listFilesTree?nr=${bildNr}`);
+      const res = await fetch(`${BASE_URL}/utils/listFilesTree/${bildNr}`);
       if (!res.ok) throw new Error("Fehler beim Laden der zugehörigen Dateien.");
       const data = await res.json();
       setRelatedFiles(data.entries);
