@@ -1,4 +1,5 @@
-//components/BildBeschreibungModal
+//components/BildBeschreibungModal.tsx
+
 
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "../store/StoreContext"
@@ -7,6 +8,7 @@ import type { BildData } from "../types/Bild"
 import ExifInfo from "./ExifInfo"
 import LlmInfo from "./LlmInfo"
 import { BildLink } from "./BildLink"
+import VideoProjekt from "./VideoProjekt"
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -17,19 +19,19 @@ export default function BildBeschreibungModal({
   nr: number
   onClose: (refresh?: boolean) => void
 }) {
-  const { kategorieStore, suchStore } = useStore()
-  const [bild, setBild] = useState<BildData | null>(null)
-  const [originalBild, setOriginalBild] = useState<BildData | null>(null)
-  const [kategorien, setKategorien] = useState<any[]>([])
-  const [vorgeschlageneKategorien, setVorgeschlageneKategorien] = useState<any[]>([])
-  const [isSaving, setIsSaving] = useState(false)
-  const [refreshNeeded, setRefreshNeeded] = useState(false)
-  const [lastPicInfo, setLastPicInfo] = useState<{ NR: number; info: string } | null>(null)
-  const [navigationMode, setNavigationMode] = useState<'Aufnahmedatum' | 'nr'>('Aufnahmedatum')
-  const [isChronoActive, setIsChronoActive] = useState(false)
-  const [ansichtModus, setAnsichtModus] = useState<"normal" | "exif" | "llm">("normal")
-  const modalRef = useRef<HTMLDivElement>(null)
-  
+  const { kategorieStore, suchStore } = useStore();
+  const [bild, setBild] = useState<BildData | null>(null);
+  const [originalBild, setOriginalBild] = useState<BildData | null>(null);
+  const [kategorien, setKategorien] = useState<any[]>([]);
+  const [vorgeschlageneKategorien, setVorgeschlageneKategorien] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [refreshNeeded, setRefreshNeeded] = useState(false);
+  const [lastPicInfo, setLastPicInfo] = useState<{ NR: number; info: string } | null>(null);
+  const [navigationMode, setNavigationMode] = useState<'Aufnahmedatum' | 'nr'>('Aufnahmedatum');
+  const [isChronoActive, setIsChronoActive] = useState(false);
+  const [ansichtModus, setAnsichtModus] = useState<"normal" | "exif" | "llm">("normal");
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [showVideoProjekt, setShowVideoProjekt] = useState(false);
   const handleKategorieHinzufuegen = async (katId: string | number) => {
     try {
       await fetch(`${BASE_URL}/bilder/addKat/${bild?.NR}/${katId}`, {
@@ -42,7 +44,7 @@ export default function BildBeschreibungModal({
     } catch (err) {
       console.error("Fehler beim Hinzufügen:", err)
     }
-  }
+  };
 
   const handleKategorieEntfernen = async (katId: number) => {
     try {
@@ -54,7 +56,7 @@ export default function BildBeschreibungModal({
     } catch (err) {
       console.error("Fehler beim Entfernen:", err)
     }
-  }
+  };
 
   const reloadKategorien = async (bildNr: number) => {
     const res = await fetch(`${BASE_URL}/bilder/holeKatZuBild/${bildNr}`)
@@ -239,10 +241,7 @@ export default function BildBeschreibungModal({
   const isSuchTreffer = suchStore.results.some(b => b.NR === bild.NR)
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex items-start justify-center z-[1000] pt-10"
-      onClick={handleBackgroundClick}
-    >
+<div className={`fixed inset-0 flex items-start justify-center z-[1000] pt-10 ${showVideoProjekt ? "backdrop-blur-sm bg-black/30" : "bg-black bg-opacity-60"}`} onClick={handleBackgroundClick}>
       <div
         ref={modalRef}
         className="bg-white p-6 rounded shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto space-y-4"
@@ -308,22 +307,38 @@ export default function BildBeschreibungModal({
   </div>
 )}
   {/* Bildanzeige – passt sich Quer- und Hochformat korrekt an */}
-<div className="w-full max-w-3xl mx-auto bg-gray-100 flex items-center justify-center overflow-hidden rounded">
-
-<img
-  src={bild.url}
-  alt={bild.titel}
-  onClick={() => {
-    setAnsichtModus((prev) =>
-      prev === "normal" ? "exif" : prev === "exif" ? "llm" : "normal"
-    )
-  }}
-  className="w-full h-auto max-h-[768px] object-contain cursor-pointer"
-/>
-
-
-
+  <div className="w-full max-w-3xl mx-auto bg-gray-100 flex items-center justify-center overflow-hidden rounded">
+  {bild.typ === "V" || bild.url.endsWith(".mp4") ? (
+      <video
+          src={bild.url.replace("/images/", "/videos/")}
+          controls
+          autoPlay
+          preload="auto"
+          poster={bild.url}  // <<< HIER: Das Vorschaubild verwenden!
+          className="w-full h-auto max-h-[768px] object-contain rounded"
+      />
+  ) : (
+    <img
+      src={bild.url}
+      alt={bild.titel}
+      onClick={() => {
+        setAnsichtModus((prev) =>
+          prev === "normal" ? "exif" : prev === "exif" ? "llm" : "normal"
+        )
+      }}
+      className="w-full h-auto max-h-[768px] object-contain cursor-pointer"
+    />
+  )}
 </div>
+{bild.typ === "V" && (
+  <button
+    onClick={() => setShowVideoProjekt(true)}
+    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded"
+  >
+    🎬 Details & Kapitel anzeigen
+  </button>
+)}
+
 {/* Zusatzinfos: EXIF oder LLM */}
 {ansichtModus === "exif" && <><br></br><ExifInfo bildNr={bild.NR} /></>}
 {ansichtModus === "llm" && <><br></br><LlmInfo bildNr={bild.NR} /></>}
@@ -420,6 +435,25 @@ export default function BildBeschreibungModal({
             
           </div>
         )}
+
+{/* Spezielle Video-Zusatz-Anzeigen */}
+
+{showVideoProjekt && (
+  <div className="fixed inset-0 bg-black bg-opacity-80 z-[1100] flex items-center justify-center p-4">
+    <div className="relative bg-white rounded shadow-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto p-6">
+      <button
+        onClick={() => setShowVideoProjekt(false)}
+        className="absolute top-4 right-4 text-gray-600 hover:text-black text-2xl font-bold"
+      >
+        &times;
+      </button>
+
+      <VideoProjekt bildNr={bild.NR} />
+    </div>
+  </div>
+)}
+
+
 
         {/* Aktionen */}
         <div className="flex gap-2 pt-2">

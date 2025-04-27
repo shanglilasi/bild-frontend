@@ -1,9 +1,9 @@
-import { types, flow, Instance } from "mobx-state-tree"
-import { cast } from 'mobx-state-tree'
+// src/store/RootStore.ts
+
+import { types, flow, Instance, cast } from "mobx-state-tree"
 import type { BildData } from '../types/Bild'
 
-// Models
-export const Suchwerte = types.model({
+const Suchwerte = types.model({
   text: types.string,
   von: types.string,
   bis: types.string,
@@ -13,7 +13,7 @@ export const Suchwerte = types.model({
   fotograf: types.string,
 })
 
-export const Bild = types.model({
+const Bild = types.model({
   NR: types.number,
   titel: types.string,
   datum: types.string,
@@ -21,10 +21,8 @@ export const Bild = types.model({
   url: types.string,
   typ: types.string,
   kategorie: types.optional(types.string, ""),
-  fotograf:types.string,
+  fotograf: types.string,
 })
-
-
 
 const Kategorie = types.model({
   id: types.identifierNumber,
@@ -42,8 +40,9 @@ const Kamera = types.model({
 const Fotograf = types.model({
   name: types.string,
 })
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-// 🔧 Backend → Frontend Mapping
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 function transformBackendBild(item: any): BildData {
   const pfad = (item.pfad ?? '').replace(/\\/g, '/').replace(/\/+/g, '/')
   const datei = (item.datei ?? '').replace(/\\/g, '/')
@@ -54,15 +53,12 @@ function transformBackendBild(item: any): BildData {
     datum: item.AUFNAHMEDATUM ?? '',
     kamera: item.kamera ?? '',
     typ: item.typ ?? '',
-    url: pfad && datei
-    ? `${BASE_URL}/utils/images/${pfad}/${datei}`
-    : '',
+    url: pfad && datei ? `${BASE_URL}/utils/images/${pfad}/${datei}` : '',
     kategorie: item.kategorie ?? '',
     fotograf: item.fotograf ?? '',
   }
 }
 
-// SuchStore (MST)
 const SuchStore = types
   .model("SuchStore", {
     values: Suchwerte,
@@ -74,6 +70,8 @@ const SuchStore = types
       kategorie: types.string,
     }),
     view: types.maybeNull(types.string),
+    mainView: types.maybeNull(types.string),
+    verwaltungTab: types.enumeration(["ordner", "bilder", "reports"]),
   })
   .actions((self) => ({
     setValues(values: Partial<typeof self.values>) {
@@ -96,18 +94,19 @@ const SuchStore = types
     setView(view: string | null) {
       self.view = view
     },
+    setMainView(view: string | null) {
+      self.mainView = view
+    },
+    setVerwaltungTab(tab: "ordner" | "bilder" | "reports") {
+      self.verwaltungTab = tab
+    },
     updateBild(updatedBild: BildData) {
       const index = self.results.findIndex((b) => b.NR === updatedBild.NR)
       if (index >= 0) {
         self.results[index] = updatedBild as any
-    
-        // 🧠 Trick: sortField ändern & zurücksetzen → MobX reagiert
         const originalField = self.sortField
         const originalOrder = self.sortOrder
-    
-        // Verwende ein Dummy-Feld, das du nie benutzt – garantiert Wechsel
         const dummyField = "__trigger__"
-    
         self.sortField = dummyField
         setTimeout(() => {
           self.sortField = originalField
@@ -115,7 +114,6 @@ const SuchStore = types
         }, 0)
       }
     },
-
     search: flow(function* (values) {
       try {
         const res = yield fetch(`${BASE_URL}/bilder/bilder`, {
@@ -131,7 +129,6 @@ const SuchStore = types
             fotograf: values.fotograf,
             noKategorie: values.noKategorie,
             noTitle: values.noTitle,
-
           }),
         })
 
@@ -143,23 +140,17 @@ const SuchStore = types
         console.error("Fehler bei der Suche:", err)
       }
     }),
-
   }))
   .views((self) => ({
     get filteredResults() {
       return self.results.filter((item) => {
-        const kameraOk = self.activeFilters.kamera
-          ? item.kamera === self.activeFilters.kamera
-          : true
-        const kategorieOk = self.activeFilters.kategorie
-          ? item.kategorie === self.activeFilters.kategorie
-          : true
+        const kameraOk = self.activeFilters.kamera ? item.kamera === self.activeFilters.kamera : true
+        const kategorieOk = self.activeFilters.kategorie ? item.kategorie === self.activeFilters.kategorie : true
         return kameraOk && kategorieOk
       })
     },
   }))
 
-// KategorieStore (MST)
 const KategorieStore = types
   .model("KategorieStore", {
     kategorien: types.array(Kategorie),
@@ -179,20 +170,14 @@ const KategorieStore = types
       try {
         const res = yield fetch(`${BASE_URL}/kategorien/kategorien`)
         const data = yield res.json()
-       // self.kategorien = data
-
-
-        self.kategorien = cast(
-          data.map((item: any) => ({
-            id: Number(item.id),
-            bezeichnung: item.bezeichnung ?? '',
-            beschreibung: item.beschreibung ?? '',
-            kattyp: item.kattyp ?? '',
-            ober: item.ober ?? null,
-            hidden: item.hidden ?? 0,
-          }))
-        )
-
+        self.kategorien = cast(data.map((item: any) => ({
+          id: Number(item.id),
+          bezeichnung: item.bezeichnung ?? '',
+          beschreibung: item.beschreibung ?? '',
+          kattyp: item.kattyp ?? '',
+          ober: item.ober ?? null,
+          hidden: item.hidden ?? 0,
+        })))
         self.loading = false
       } catch (err: any) {
         self.error = err.message
@@ -227,13 +212,11 @@ const KategorieStore = types
     }),
   }))
 
-// RootStore
 export const RootStore = types.model({
   suchStore: SuchStore,
   kategorieStore: KategorieStore,
 })
 
-// Factory
 export const createRootStore = () =>
   RootStore.create({
     suchStore: {
@@ -254,6 +237,8 @@ export const createRootStore = () =>
         kategorie: "",
       },
       view: null,
+      mainView: null,
+      verwaltungTab: "ordner",
     },
     kategorieStore: {
       kategorien: [],

@@ -4,11 +4,12 @@ import React, { useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import { useStore } from '../store/StoreContext'
 import SucheView from '../views/SucheView'
-import KategorieFormSmart from './KategorieFormSmart' // <- NEU
+import KategorieFormSmart from './KategorieFormSmart'
+
 
 const Sidebar: React.FC = observer(() => {
   const { suchStore } = useStore()
-  const { setView, view } = suchStore
+  const { setView, view, mainView, verwaltungTab, setVerwaltungTab } = suchStore
 
   const [showKategorieForm, setShowKategorieForm] = useState(false)
 
@@ -26,7 +27,7 @@ const Sidebar: React.FC = observer(() => {
 
   const handleSearch = () => {
     const mindestens3Zeichen = sucheValues.text.trim().length >= 3
-    const kategorieVorhanden = !!sucheValues.kategorie && sucheValues.kategorie !== ''
+    const kategorieVorhanden = !!sucheValues.kategorie
 
     if (!mindestens3Zeichen && !kategorieVorhanden && !sucheValues.noKategorie && !sucheValues.noTitle) {
       alert("Bitte mindestens 3 Zeichen im Suchtext eingeben oder eine Kategorie wählen.")
@@ -36,46 +37,75 @@ const Sidebar: React.FC = observer(() => {
     suchStore.search(sucheValues)
   }
 
-  return (
-    <div className="w-60 bg-gray-900 text-white p-4 space-y-4 overflow-y-auto">
-      <div className="space-y-2">
-        <button
-          className={`w-full p-2 rounded ${view === 'suche' ? 'bg-blue-700' : 'bg-gray-700'}`}
-          onClick={() => setView('suche')}
-        >
-          Suche
-        </button>
-        <button
-          className={`w-full p-2 rounded ${view === 'browser' ? 'bg-blue-700' : 'bg-gray-700'}`}
-          onClick={() => setView('browser')}
-        >
-          Browser
-        </button>
-        <button
-          className="w-full p-2 bg-gray-700 rounded hover:bg-blue-600"
-          onClick={() => setShowKategorieForm((prev) => !prev)}
-        >
-          Kategorie
-        </button>
-      </div>
-
-      {/* Suchmaske */}
-      {view === 'suche' && (
-        <SucheView
-          values={sucheValues}
-          onChange={setSucheValues}
-          onSearch={handleSearch}
-        />
-      )}
-
-      {/* Kategorie-Formular (autonom) */}
-      {showKategorieForm && (
-        <div className="mt-4">
-          <KategorieFormSmart />
+  if (mainView === "bilder") {
+    return (
+      <div className="w-60 bg-gray-900 text-white p-4 space-y-4 overflow-y-auto">
+        <div className="space-y-2">
+          <button
+            className={`w-full p-2 rounded ${view === 'suche' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setView('suche')}
+          >
+            Suche
+          </button>
+          <button
+            className={`w-full p-2 rounded ${view === 'browser' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setView('browser')}
+          >
+            Browser
+          </button>
+          <button
+            className="w-full p-2 bg-gray-700 rounded hover:bg-blue-600"
+            onClick={() => setShowKategorieForm((prev) => !prev)}
+          >
+            Kategorie
+          </button>
         </div>
-      )}
-    </div>
-  )
+
+        {view === 'suche' && (
+          <SucheView
+            values={sucheValues}
+            onChange={setSucheValues}
+            onSearch={handleSearch}
+          />
+        )}
+
+        {showKategorieForm && (
+          <div className="mt-4">
+            <KategorieFormSmart />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (mainView === "verwaltung") {
+    return (
+      <div className="w-60 bg-gray-900 text-white p-4 space-y-4 overflow-y-auto">
+        <div className="space-y-2">
+          <button
+            className={`w-full p-2 rounded ${verwaltungTab === 'ordner' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setVerwaltungTab('ordner')}
+          >
+            Ordner
+          </button>
+          <button
+            className={`w-full p-2 rounded ${verwaltungTab === 'bilder' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setVerwaltungTab('bilder')}
+          >
+            Bilder
+          </button>
+          <button
+            className={`w-full p-2 rounded ${verwaltungTab === 'reports' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setVerwaltungTab('reports')}
+          >
+            Reports
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
 })
 
 export default Sidebar
