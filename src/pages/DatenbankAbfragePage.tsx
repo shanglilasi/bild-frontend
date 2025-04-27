@@ -1,18 +1,17 @@
-// Datei: src/pages/DatenbankAbfragePage.tsx
-import React, { useState } from "react";
+import { useState, ReactElement } from "react";
 import FolderTable from "../components/FolderTable";
 
 type Tab = "ordner" | "bilder" | "reports";
 
-export default function DatenbankAbfragePage() {
+export default function DatenbankAbfragePage(): ReactElement {
   const [activeTab, setActiveTab] = useState<Tab>("ordner");
 
   return (
     <div className="p-4">
-      
       {/* Tab-Schalterleiste */}
       <div className="mb-6 flex space-x-4 border-b pb-2">
         <button
+          type="button"
           className={`px-4 py-2 rounded-t ${
             activeTab === "ordner" ? "bg-blue-500 text-white" : "bg-gray-200"
           }`}
@@ -21,20 +20,22 @@ export default function DatenbankAbfragePage() {
           🗂️ Ordner
         </button>
         <button
+          type="button"
           className={`px-4 py-2 rounded-t ${
             activeTab === "bilder" ? "bg-blue-500 text-white" : "bg-gray-200"
           }`}
           onClick={() => setActiveTab("bilder")}
         >
-          🖼️ gaga1
+          🖼️ Bilder
         </button>
         <button
+          type="button"
           className={`px-4 py-2 rounded-t ${
             activeTab === "reports" ? "bg-blue-500 text-white" : "bg-gray-200"
           }`}
           onClick={() => setActiveTab("reports")}
         >
-          📊 gaga2
+          📊 Reports
         </button>
       </div>
 
