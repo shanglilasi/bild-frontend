@@ -13,7 +13,7 @@ const rootStore = createRootStore()
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <StoreContext.Provider value={rootStore}>
-      <BrowserRouter basename="/react">
+      <BrowserRouter basename="/">
         <App />
       </BrowserRouter>
     </StoreContext.Provider>

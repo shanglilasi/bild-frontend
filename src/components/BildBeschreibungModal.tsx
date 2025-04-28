@@ -24,7 +24,7 @@ export default function BildBeschreibungModal({
   const [originalBild, setOriginalBild] = useState<BildData | null>(null);
   const [kategorien, setKategorien] = useState<any[]>([]);
   const [vorgeschlageneKategorien, setVorgeschlageneKategorien] = useState<any[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+
   const [refreshNeeded, setRefreshNeeded] = useState(false);
   const [lastPicInfo, setLastPicInfo] = useState<{ NR: number; info: string } | null>(null);
   const [navigationMode, setNavigationMode] = useState<'Aufnahmedatum' | 'nr'>('Aufnahmedatum');
@@ -104,18 +104,21 @@ export default function BildBeschreibungModal({
   }
 
   const handleChronoNavigation = async (direction: 'prev' | 'next') => {
-    if (!bild) return
+    if (!bild) return;
+  
+    await saveChangesIfNeeded(); // <--- NEU: Änderungen speichern!
+  
     try {
       const res = await fetch(
         `${BASE_URL}/bilder/chrono/${navigationMode}/${bild.NR}/${direction}`
-      )
-      const data = await res.json()
+      );
+      const data = await res.json();
       if (!data?.NR) {
-        alert("Kein weiteres Bild gefunden.")
-        return
+        alert("Kein weiteres Bild gefunden.");
+        return;
       }
-
-      const url = `${BASE_URL}/utils/images/${data.pfad}/${data.datei}`
+  
+      const url = `${BASE_URL}/utils/images/${data.pfad}/${data.datei}`;
       const loaded: BildData = {
         NR: data.NR,
         titel: data.titel ?? '',
@@ -125,20 +128,18 @@ export default function BildBeschreibungModal({
         url,
         kategorie: data.kategorie ?? '',
         fotograf: data.fotograf ?? '',
-      }
-
-      setBild(loaded)
-      setOriginalBild(loaded)
-      setRefreshNeeded(true)
-
-      // Kategorien + Vorschläge neu laden
-      await reloadKategorien(data.NR)
-      await fetchVorschlaege()
-
+      };
+  
+      setBild(loaded);
+      setOriginalBild(loaded);
+      setRefreshNeeded(true);
+  
+      await reloadKategorien(data.NR);
+      await fetchVorschlaege();
     } catch (err) {
-      console.error("Fehler bei der Chrono-Navigation:", err)
+      console.error("Fehler bei der Chrono-Navigation:", err);
     }
-  }
+  };
 
   useEffect(() => {
     loadBild(nr)
@@ -165,56 +166,53 @@ export default function BildBeschreibungModal({
     )
   }
 
-  const handleSave = async () => {
-    if (!bild) return
+  
 
-    if (hasCriticalChanges() && !confirmCriticalChanges()) {
-      return
+ 
+  const handleBackgroundClick = async (e: React.MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      await saveChangesIfNeeded();
+      onClose(refreshNeeded);
     }
+  };
 
-    setIsSaving(true)
+  const saveChangesIfNeeded = async () => {
+    if (!bild) return;
+  
+    if (hasCriticalChanges() && !confirmCriticalChanges()) {
+      return;
+    }
+  
     try {
       const cleanBild = {
         ...bild,
         datum: bild.datum || "",
         typ: bild.typ || "",
-      }
-
+      };
+  
       const res = await fetch(`${BASE_URL}/bilder/bild/${cleanBild.NR}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cleanBild),
-      })
-
-      if (!res.ok) throw new Error("Fehler beim Speichern")
-
-      const isTreffer = suchStore.results.some((b) => b.NR === cleanBild.NR)
+      });
+  
+      if (!res.ok) throw new Error("Fehler beim Speichern");
+  
+      const isTreffer = suchStore.results.some((b) => b.NR === cleanBild.NR);
       if (isTreffer) {
-        suchStore.updateBild(cleanBild)
+        suchStore.updateBild(cleanBild);
       }
-
-      onClose(true)
+  
+      setOriginalBild(cleanBild); // Aktualisiere Originalbild nach erfolgreichem Speichern
+      setRefreshNeeded(true);
     } catch (err) {
-      console.error(err)
-      alert("Speichern fehlgeschlagen")
-    } finally {
-      setIsSaving(false)
+      console.error(err);
+      alert("Speichern fehlgeschlagen");
     }
-  }
+  };
 
-  const handleCancel = () => {
-    onClose(refreshNeeded)
-  }
 
-  const handleBackgroundClick = (e: React.MouseEvent) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      if (hasCriticalChanges()) {
-        handleSave()
-      } else {
-        onClose(refreshNeeded)
-      }
-    }
-  }
+
 
   const handleSameAsLastPic = async () => {
     if (!lastPicInfo) return
@@ -455,22 +453,7 @@ export default function BildBeschreibungModal({
 
 
 
-        {/* Aktionen */}
-        <div className="flex gap-2 pt-2">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-          >
-            {isSaving ? "Speichern..." : "Speichern"}
-          </button>
-          <button
-            onClick={handleCancel}
-            className="text-gray-600 hover:text-black"
-          >
-            Abbrechen
-          </button>
-        </div>
+        
 
 
       </div>

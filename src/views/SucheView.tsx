@@ -3,9 +3,10 @@
 import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { useStore } from "../store/StoreContext"
-// Importiere Hilfsfunktion zur Datumshandhabung
 import { format, addYears, subYears, addDays } from 'date-fns'
 import KategorieCombobox from '../components/KategorieCombobox'
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL; // <--- API-URL für searchCount
 
 interface Props {
   values: {
@@ -28,7 +29,6 @@ function SucheView({ values, onChange, onSearch }: Props) {
   const { suchStore } = useStore()
   const { results } = suchStore
 
-
   useEffect(() => {
     kategorieStore.loadKategorien()
     kategorieStore.loadKameras()
@@ -40,55 +40,125 @@ function SucheView({ values, onChange, onSearch }: Props) {
       val ? 'text-white' : 'text-gray-400 italic'
     }`
 
-    const updateDatum = (newVon: Date, newBis: Date) => {
-      onChange({
-        ...values,
-        von: format(newVon, 'yyyy-MM-dd'),
-        bis: format(newBis, 'yyyy-MM-dd'),
-      })
-    }
-  
-    const handleJahrPlus = () => {
-      const vonDate = new Date(values.von)
-      const bisDate = new Date(values.bis)
-      updateDatum(addYears(vonDate, 1), addYears(bisDate, 1))
-    }
-  
-    const handleJahrMinus = () => {
-      const vonDate = new Date(values.von)
-      const bisDate = new Date(values.bis)
-      updateDatum(subYears(vonDate, 1), subYears(bisDate, 1))
-    }
-  
-    const handleLetztesJahr = () => {
-      const heute = new Date()
-      const vorEinemJahr = subYears(heute, 1)
-      updateDatum(vorEinemJahr, heute)
-    }
-  
-    const handleHeute = () => {
-      const heute = new Date()
-      const morgen = addDays(heute, 1)
-      updateDatum(heute, morgen)
-    }
+  const updateDatum = (newVon: Date, newBis: Date) => {
+    onChange({
+      ...values,
+      von: format(newVon, 'yyyy-MM-dd'),
+      bis: format(newBis, 'yyyy-MM-dd'),
+    })
+  }
 
-    const handleMax = () => {
-      const heute = new Date()
-      const damals = subYears(heute, 100)
-      updateDatum(damals, heute)
+  const handleJahrPlus = () => {
+    const vonDate = new Date(values.von)
+    const bisDate = new Date(values.bis)
+    updateDatum(addYears(vonDate, 1), addYears(bisDate, 1))
+  }
+
+  const handleJahrMinus = () => {
+    const vonDate = new Date(values.von)
+    const bisDate = new Date(values.bis)
+    updateDatum(subYears(vonDate, 1), subYears(bisDate, 1))
+  }
+
+  const handleLetztesJahr = () => {
+    const heute = new Date()
+    const vorEinemJahr = subYears(heute, 1)
+    updateDatum(vorEinemJahr, heute)
+  }
+
+  const handleHeute = () => {
+    const heute = new Date()
+    const morgen = addDays(heute, 1)
+    updateDatum(heute, morgen)
+  }
+
+  const handleMax = () => {
+    const heute = new Date()
+    const damals = subYears(heute, 100)
+    updateDatum(damals, heute)
+  }
+
+  // 🚀 NEU: Intelligente handleSearch Funktion
+  const handleSearch = async (forceFullSearch = false) => {
+    const searchParams = {
+      text: values.text,
+      datum_von: values.von,
+      datum_bis: values.bis,
+      typ: values.typ,
+      kategorie: values.kategorie,
+      kamera: values.kamera,
+      fotograf: values.fotograf,
+      noKategorie: values.noKategorie,
+      noTitle: values.noTitle,
+      maxResults: 1000,
+      richtung: "rückwärts",
+    };
+  
+    try {
+      if (!forceFullSearch) {
+        // Zuerst nur Treffer zählen
+        const res = await fetch(`${BASE_URL}/bilder/searchCount`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(searchParams),
+        });
+  
+        const data = await res.json();
+  
+        if (data.count > searchParams.maxResults) {
+          if (data.datum_X) {
+            const decision = window.confirm(
+              `Es wurden ${data.count} Treffer gefunden.\n\nWillst du den Zeitraum automatisch bis ${data.datum_X} einschränken?\n\n(Abbrechen: Alle Treffer laden)`
+            );
+  
+            if (decision) {
+              onChange({
+                ...values,
+                bis: data.datum_X,
+              });
+  
+              // Kurze Pause, damit React State übernimmt
+              setTimeout(() => {
+                handleSearch(true); // Jetzt wirklich vollständige Suche starten!
+              }, 10);
+  
+            } else {
+              handleSearch(true); // Benutzer will trotzdem alles – volle Suche starten!
+            }
+  
+            return;
+          } else {
+            const continueSearch = window.confirm(
+              `Es wurden ${data.count} Treffer gefunden, keine automatische Begrenzung möglich.\n\nTrotzdem Suche starten?`
+            );
+  
+            if (continueSearch) {
+              handleSearch(true);
+            }
+            return;
+          }
+        }
+      }
+  
+      // Trefferanzahl ist OK oder Benutzer will alles → jetzt echte Suche auslösen
+      onSearch();
+  
+    } catch (error) {
+      console.error("Fehler bei der Suche:", error);
+      alert("Fehler beim Suchen. Bitte erneut versuchen.");
     }
-
-
+  };
 
 
   return (
     <form
       className="space-y-2 text-sm"
       onSubmit={(e) => {
-        e.preventDefault()
-        onSearch()
+        e.preventDefault();
+        handleSearch(); // <<< NEU: handleSearch statt direkt onSearch
       }}
     >
+      {/* Rest deiner Komponente bleibt 1:1 so, siehe unten */}
       {/* Suchtext */}
       <input
         type="text"
