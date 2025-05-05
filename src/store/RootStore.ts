@@ -2,7 +2,9 @@
 
 import { types, flow, Instance, cast } from "mobx-state-tree"
 import type { BildData } from '../types/Bild'
+import { BASE_URL } from '../config';
 
+// 📷 Modelle & Hilfen
 const Suchwerte = types.model({
   text: types.string,
   von: types.string,
@@ -15,6 +17,7 @@ const Suchwerte = types.model({
 
 const Bild = types.model({
   NR: types.number,
+  datei: types.string, // <=== HINZUFÜGEN
   titel: types.string,
   datum: types.string,
   kamera: types.string,
@@ -41,7 +44,54 @@ const Fotograf = types.model({
   name: types.string,
 })
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+const AuthStore = types
+  .model("AuthStore", {
+    isAuthenticated: types.boolean,
+    username: types.string,
+    isLoading: types.boolean, // NEU!
+  })
+  .actions((self) => ({
+    login(username: string) {
+      self.isAuthenticated = true
+      self.username = username
+    },
+    logout: flow(function* () {
+      try {
+        yield fetch('/login/logout', {
+          method: 'GET',
+          credentials: 'include',
+        })
+      } catch (e) {
+        console.error("Fehler beim Logout:", e)
+      }
+      self.isAuthenticated = false
+      self.username = ""
+      window.location.href = "/login" // wichtig!
+    }),
+    checkSession: flow(function* () {
+      self.isLoading = true // Ladevorgang beginnt
+      try {
+        const res = yield fetch('/login/status', {
+          method: 'GET',
+          credentials: 'include',
+        })
+        const data = yield res.json()
+        self.isAuthenticated = data.loggedIn
+        self.username = data.user || ''
+      } catch {
+        self.isAuthenticated = false
+        self.username = ''
+      } finally {
+        self.isLoading = false // Ladevorgang beendet
+      }
+    }),
+  }))
+
+
+
+
+
 
 function transformBackendBild(item: any): BildData {
   const pfad = (item.pfad ?? '').replace(/\\/g, '/').replace(/\/+/g, '/')
@@ -50,6 +100,7 @@ function transformBackendBild(item: any): BildData {
   return {
     NR: item.NR,
     titel: item.STICHWORTE ?? '',
+    datei: item.datei ?? '',
     datum: item.AUFNAHMEDATUM ?? '',
     kamera: item.kamera ?? '',
     typ: item.typ ?? '',
@@ -59,6 +110,7 @@ function transformBackendBild(item: any): BildData {
   }
 }
 
+// 🔍 SuchStore
 const SuchStore = types
   .model("SuchStore", {
     values: Suchwerte,
@@ -71,7 +123,7 @@ const SuchStore = types
     }),
     view: types.maybeNull(types.string),
     mainView: types.maybeNull(types.string),
-    verwaltungTab: types.enumeration(["ordner", "bilder", "reports"]),
+    verwaltungTab: types.enumeration(["ordner", "videoeditor","bilder", "reports"]),
   })
   .actions((self) => ({
     setValues(values: Partial<typeof self.values>) {
@@ -97,21 +149,15 @@ const SuchStore = types
     setMainView(view: string | null) {
       self.mainView = view
     },
-    setVerwaltungTab(tab: "ordner" | "bilder" | "reports") {
+    setVerwaltungTab(tab: "ordner" | "bilder" | "reports"| "videoeditor") {
       self.verwaltungTab = tab
     },
     updateBild(updatedBild: BildData) {
       const index = self.results.findIndex((b) => b.NR === updatedBild.NR)
       if (index >= 0) {
         self.results[index] = updatedBild as any
-        const originalField = self.sortField
-        const originalOrder = self.sortOrder
-        const dummyField = "__trigger__"
-        self.sortField = dummyField
-        setTimeout(() => {
-          self.sortField = originalField
-          self.sortOrder = originalOrder
-        }, 0)
+    
+      
       }
     },
     search: flow(function* (values) {
@@ -151,6 +197,7 @@ const SuchStore = types
     },
   }))
 
+// 📁 KategorieStore
 const KategorieStore = types
   .model("KategorieStore", {
     kategorien: types.array(Kategorie),
@@ -212,13 +259,26 @@ const KategorieStore = types
     }),
   }))
 
+
+
+
+
+  
+// 🧠 RootStore-Definition
 export const RootStore = types.model({
+  authStore: AuthStore,
   suchStore: SuchStore,
   kategorieStore: KategorieStore,
 })
 
+// 🧪 Initialisierung
 export const createRootStore = () =>
   RootStore.create({
+    authStore: {
+      isAuthenticated: false,
+      username:"",
+      isLoading: true, // NEU
+    },
     suchStore: {
       values: {
         text: "",
@@ -253,4 +313,5 @@ export const createRootStore = () =>
     },
   })
 
+// Typ für Store-Zugriff in Context
 export interface IRootStore extends Instance<typeof RootStore> {}

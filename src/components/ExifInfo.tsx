@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { BASE_URL } from '../config';
 export default function ExifInfo({ bildNr }: { bildNr: number }) {
   const [exif, setExif] = useState<any>(null)
   const [loading, setLoading] = useState(true)

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import KategorieCombobox from './KategorieCombobox'
 import KategorieListe from './Kategorieliste' 
 import { useStore } from '../store/StoreContext' 
-
+import { BASE_URL } from '../config';
 type Kategorie = {
   id: number
   bezeichnung: string
@@ -126,7 +126,7 @@ export default function KategorieForm({
       alert("Keine Treffer gefunden.")
       return
     }
-    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    
     const confirmed = window.confirm(`Allen ${treffer.length} Treffern die Kategorie "${kat.bezeichnung}" zuweisen?`)
     if (!confirmed) return
 

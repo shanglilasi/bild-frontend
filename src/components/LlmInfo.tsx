@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Bot, Loader2 } from "lucide-react"
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { BASE_URL } from '../config';
 
 export default function LlmInfo({ bildNr }: { bildNr: number }) {
   const [info, setInfo] = useState<{ stichworte: string[] }>({ stichworte: [] })

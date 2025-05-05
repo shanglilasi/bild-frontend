@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import KategorieInfo from "./KategorieInfo"
 import type { BildData } from "../types/Bild"
 import BildBeschreibungModal from "./BildBeschreibungModal"
+import { BASE_URL } from '../config';
 
 interface Kategorie {
   id: number
@@ -21,7 +22,7 @@ export default function PIC({ data }: { data: BildData }) {
   const ref = useRef<HTMLDivElement>(null)
   const isVideo = data.url.endsWith(".mp4") || data.typ === "V"
   const [kategorien, setKategorien] = useState<Kategorie[]>([])
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL
+  
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -107,15 +108,21 @@ export default function PIC({ data }: { data: BildData }) {
   const infoBlock = (
     <div className="mt-2 text-left text-sm space-y-1">
       <div className="flex items-center justify-between text-sm mt-2 text-left">
-        <strong onClick={() => setModalOpen(true)}>🛠️ {data.NR}</strong>
+      <span
+  onClick={() =>{console.log("Klick!"); setModalOpen(true)}}
+  className="text-blue-600 hover:underline cursor-pointer font-mono text-sm"
+  title="Bearbeiten"
+>
+  🛠️ {data.datei}
+</span>
         <a
           href={data.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-600 hover:text-blue-800 text-lg"
+          className="text-gray-600 hover:text-blue-800 text-lg" 
           title="Bild in neuem Tab öffnen"
         >
-          🔍
+          ⬈
         </a>
       </div>
 
@@ -123,7 +130,7 @@ export default function PIC({ data }: { data: BildData }) {
       <p><strong>Datum:</strong> {data.datum}</p>
       <p><strong>Kamera:</strong> {data.kamera}</p>
       <p><strong>Fotograf:</strong> {data.fotograf}</p>
-
+      
       {kategorien.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1 max-h-24 overflow-y-auto">
           {kategorien.map((k: any) => (

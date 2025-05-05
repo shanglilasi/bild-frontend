@@ -5,7 +5,7 @@ import { useStore } from '../store/StoreContext'
 
 export default function Navigation() {
   const location = useLocation()
-  const { suchStore } = useStore()
+  const { suchStore, authStore } = useStore()
 
   const handleNavClick = (view: string) => {
     suchStore.setMainView(view)
@@ -17,7 +17,7 @@ export default function Navigation() {
   ]
 
   return (
-    <nav className="bg-gray-200 px-4 py-2 flex gap-2">
+    <nav className="bg-black px-4 py-2 flex gap-2 items-center">
       {navLinks.map(({ to, label, view }) => (
         <Link
           key={to}
@@ -31,6 +31,25 @@ export default function Navigation() {
           {label}
         </Link>
       ))}
+
+      {/* Rechts: Login/Logout-Button */}
+      <div className="ml-auto flex items-center gap-2">
+        {authStore.isAuthenticated ? (
+          <button
+            onClick={authStore.logout}
+            className="bg-gray-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+          >
+            Logoff {authStore.username}
+          </button>
+        ) : (
+          <Link
+            to="/login"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+          >
+            Login
+          </Link>
+        )}
+      </div>
     </nav>
   )
 }

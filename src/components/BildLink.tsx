@@ -26,7 +26,7 @@ export function BildLink({ url }: BildLinkProps) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-600 hover:text-blue-800 text-lg"
+          className="text-gray-600 hover:text-blue-800 text-sm"
           title="Bild in neuem Tab öffnen"
         >
           {url.split('/utils/images/')[1]?.replace(/\\/g, '/').replace(/\/+/g, '/')}

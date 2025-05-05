@@ -9,8 +9,7 @@ import ExifInfo from "./ExifInfo"
 import LlmInfo from "./LlmInfo"
 import { BildLink } from "./BildLink"
 import VideoProjekt from "./VideoProjekt"
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { BASE_URL } from '../config';
 
 export default function BildBeschreibungModal({
   nr,
@@ -70,6 +69,7 @@ export default function BildBeschreibungModal({
     const url = `${BASE_URL}/utils/images/${data.bild.pfad}/${data.bild.datei}`
     const loaded: BildData = {
       NR: data.bild.NR,
+      datei:data.bild.datei?? '',
       titel: data.bild.titel ?? '',
       datum: data.bild.AUFNAHMEDATUM ?? '',
       kamera: data.bild.kamera ?? '',
@@ -84,8 +84,11 @@ export default function BildBeschreibungModal({
   }
 
   const fetchVorschlaege = async () => {
+    if (!bild?.NR || typeof bild.NR !== 'number') return
+  
     try {
-      const res = await fetch(`${BASE_URL}/bilder/propKat/${bild?.NR}/10`)
+      const url = `${BASE_URL}/bilder/propKat/${bild.NR}/10`
+      const res = await fetch(url)
       const data = await res.json()
       setVorgeschlageneKategorien(data)
     } catch (err) {
@@ -121,6 +124,7 @@ export default function BildBeschreibungModal({
       const url = `${BASE_URL}/utils/images/${data.pfad}/${data.datei}`;
       const loaded: BildData = {
         NR: data.NR,
+        datei: data.datei ?? '',
         titel: data.titel ?? '',
         datum: data.AUFNAHMEDATUM ?? '',
         kamera: data.kamera ?? '',
@@ -254,7 +258,7 @@ export default function BildBeschreibungModal({
         onClick={() => handleChronoNavigation('prev')}
         className="bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded whitespace-nowrap"
       >
-        ◀ Vorheriges
+        ◀ 
       </button>
     ) : (
       <div className="w-[120px]" /> // Platzhalter wenn der Button fehlt
@@ -268,7 +272,7 @@ export default function BildBeschreibungModal({
           checked={isChronoActive}
           onChange={(e) => setIsChronoActive(e.target.checked)}
         />
-        Chronologische Navigation 
+        Alle
       </label>
 
       {isChronoActive && (
@@ -283,10 +287,11 @@ export default function BildBeschreibungModal({
           <option value="NR">Bildnummer</option>
         </select>
       )}
-
+{bild.datum}
+<BildLink url={bild.url} />
       {isSuchTreffer && (
-        <div className="text-xs text-gray-500 italic">
-          (Teil der aktuellen Suchergebnisse)
+        <div className="text-xs text-gray-500 italic" title="Bild in deiner Suche enthalten">
+          🔎
         </div>
       )}
     </div>
@@ -297,7 +302,7 @@ export default function BildBeschreibungModal({
         onClick={() => handleChronoNavigation('next')}
         className="bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded whitespace-nowrap"
       >
-        Nächstes ▶
+         ▶
       </button>
     ) : (
       <div className="w-[120px]" /> // Platzhalter wenn der Button fehlt
@@ -332,7 +337,7 @@ export default function BildBeschreibungModal({
   <button
     onClick={() => setShowVideoProjekt(true)}
     className="mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded"
-  >
+ >
     🎬 Details & Kapitel anzeigen
   </button>
 )}
@@ -361,7 +366,7 @@ export default function BildBeschreibungModal({
             onChange={(e) => handleChange("fotograf", e.target.value)}
           />
         </div>
-
+        
         <div className="flex items-center gap-2">
           <label className="w-24 font-medium">Kamera:</label>
           <input
@@ -371,7 +376,7 @@ export default function BildBeschreibungModal({
           />
         </div>
 
-        <BildLink url={bild.url} />
+        
 
        
         {/* Kategorien */}
@@ -435,14 +440,13 @@ export default function BildBeschreibungModal({
         )}
 
 {/* Spezielle Video-Zusatz-Anzeigen */}
-
 {showVideoProjekt && (
-  <div className="fixed inset-0 bg-black bg-opacity-80 z-[1100] flex items-center justify-center p-4">
-    <div className="relative bg-white rounded shadow-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto p-6">
+  <div className="fixed inset-0 bg-black bg-opacity-80 z-[1100] flex items-center justify-center">
+    <div className="relative bg-white w-full h-full overflow-auto p-6 rounded-none shadow-none">
       <button
         onClick={() => setShowVideoProjekt(false)}
-        className="absolute top-4 right-4 text-gray-600 hover:text-black text-2xl font-bold"
-      >
+        className="absolute top-4 right-4 text-gray-600 hover:text-black text-3xl font-bold z-10"
+        >
         &times;
       </button>
 

@@ -1,8 +1,7 @@
 // src/views/BrowserView.tsx
-
 import { observer } from 'mobx-react-lite'
 import { useStore } from '../store/StoreContext'
-import PIC from '../components/PIC'
+import SlideshowController from '../components/SlideshowController'
 
 const BrowserView = observer(() => {
   const { suchStore } = useStore()
@@ -12,13 +11,7 @@ const BrowserView = observer(() => {
     return <p className="text-gray-500">Keine Bilder gefunden oder noch nicht geladen.</p>
   }
 
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {bilder.map((bild, i) => (
-        <PIC key={i} data={bild} />
-      ))}
-    </div>
-  )
+  return <SlideshowController />
 })
 
 export default BrowserView

@@ -3,8 +3,7 @@ import React, { useEffect, useState } from "react"
 import KategorieCombobox from "./KategorieCombobox"
 import { useStore } from "../store/StoreContext"
 import { observer } from "mobx-react-lite"
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL
+import { BASE_URL } from '../config';
 
 interface Folder {
   NR: number
@@ -79,8 +78,8 @@ const FolderTable: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="space-y-4">
+    <div className="p-1 bg-white">
+      <div className="space-y-1">
         <h3 className="text-lg font-semibold">
           Bilder direkt einer Kategorie zuordnen:
         </h3>
