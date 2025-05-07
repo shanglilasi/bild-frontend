@@ -19,6 +19,15 @@ export interface Mark {
     marks?: Mark[];
     isExpanded?: boolean;
   }
+
+
+   export interface SchnittmarkenVariante {
+      id: number;
+      name: string;
+      video_path: string;
+      is_active: boolean;
+      data: EditableMark[];
+    }
   
   export interface VideoProjektProps {
     bildNr: number;

@@ -9,7 +9,7 @@ import {
   saveMarks,
   
 } from "./service";
-import { EditableMark, FileEntry, VideoProjektProps } from "./types";
+import { EditableMark, FileEntry, VideoProjektProps, SchnittmarkenVariante } from "./types";
 import { BASE_URL } from '../../config';
 
 export default function VideoProjekt({ bildNr }: VideoProjektProps) {
@@ -21,6 +21,15 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isWorking, setIsWorking] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+
+  
+  const [markenVarianten, setMarkenVarianten] = useState<SchnittmarkenVariante[]>([]);
+  const [selectedMarkenId, setSelectedMarkenId] = useState<number | null>(null);
+
+  const [variantName, setVariantName] = useState("");
+
+
 
   useEffect(() => {
     fetchRelatedFiles(bildNr).then(setRelatedFiles);
@@ -49,6 +58,28 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
       loadMarks(selectedFileFullPath).then(setMarks);
     }
   }, [selectedFileFullPath, selectedFileType]);
+
+
+
+  useEffect(() => {
+    if (!selectedFileFullPath || selectedFileType !== "video") return;
+  
+    const loadVarianten = async () => {
+      try {
+        const encodedPath = encodeURIComponent(selectedFileFullPath.replaceAll("/", "|"));
+        const res = await fetch(`${BASE_URL}/utils/schnittmarken_proj/${bildNr}/${encodedPath}`);
+        if (!res.ok) throw new Error("Serverantwort war nicht OK");
+        const data = await res.json();
+        setMarkenVarianten(data);
+        if (data.length > 0) setSelectedMarkenId(data[0].id);
+      } catch (err) {
+        console.error("Fehler beim Laden der Varianten:", err);
+      }
+    };
+  
+    loadVarianten();
+  }, [selectedFileFullPath, selectedFileType]);
+
 
   const handleVideoAction = async (
     endpoint: string,
@@ -99,8 +130,47 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
 
   const handleSaveMarks = async () => {
     if (!selectedFileFullPath) return;
-    await saveMarks(selectedFileFullPath, marks);
+  
+    try {
+      const encoded = encodeURIComponent(selectedFileFullPath.replaceAll("/", "|"));
+      const res = await fetch(`${BASE_URL}/utils/marks/${bildNr}/${encoded}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          marks,
+          name: variantName.trim(),
+          
+        }),
+      });
+  
+      if (!res.ok) throw new Error("Fehler beim Speichern.");
+      alert("Marken gespeichert.");
+    } catch (err) {
+      console.error(err);
+      alert("Fehler beim Speichern.");
+    }
   };
+
+  const handleCloneVariant = async (id: number) => {
+    try {
+      const res = await fetch(`${BASE_URL}/utils/schnittmarken/${id}`);
+      if (!res.ok) throw new Error("Variante konnte nicht geladen werden");
+      const data = await res.json();
+  
+      if (data?.data) {
+        setMarks(data.data);
+        setVariantName(data.name); // optional: auch den Namen übernehmen
+      }
+    } catch (err) {
+      console.error("Fehler beim Clonen:", err);
+      alert("Fehler beim Laden der Variante.");
+    }
+  };
+
+
+
+
+
 
   return (
     <div className="flex gap-6">
@@ -128,6 +198,8 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
             ))}
           </div>
         </div>
+
+
 
         {/* Action Buttons BELOW FileTree */}
         {selectedFileFullPath && selectedFileType === "video" && (
@@ -291,9 +363,41 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
                 <p>⏱ Aktuelle Position: {formatTime(currentTime)}</p>
               </div>
 
+
               <div className="w-full mt-6">
+
+              <div className="mb-2 flex items-center gap-2">
+  <label className="text-sm font-medium text-gray-700">Marken-Variante:</label>
+  <select
+  value={selectedMarkenId ?? ''}
+  onChange={(e) => {
+    const id = Number(e.target.value);
+    setSelectedMarkenId(id);
+    if (id) {
+      handleCloneVariant(id);
+    }
+  }}
+  className="border px-2 py-1 rounded text-sm"
+>
+    <option value="">-- auswählen --</option>
+    {markenVarianten.map((v) => (
+      <option key={v.id} value={v.id}>
+        {v.name} {v.is_active ? '⭐' : ''}
+      </option>
+    ))}
+  </select>
+</div>
+
+
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="font-bold">Zeitmarken speichern!</h4>
+                  <input
+    type="text"
+    placeholder="Name der Marken-Variante"
+    value={variantName}
+    onChange={(e) => setVariantName(e.target.value)}
+    className="flex-1 border px-2 py-1 rounded text-sm"
+  />
                   <button onClick={handleSaveMarks} className="bg-green-600 text-white px-2 py-1 rounded">💾</button>
                   <div className="mt-3 text-sm text-gray-700">
                 <p>🧠 Für die Bereinigung des Videos markiere alle erwünschten Zeiten mit einem Leerzeichen als Kommentar.</p>

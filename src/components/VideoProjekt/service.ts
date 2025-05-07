@@ -33,10 +33,10 @@ export async function loadMarks(videoFullPath: string): Promise<EditableMark[]> 
   return [];
 }
 
-export async function saveMarks(fullPath: string, marks: EditableMark[]) {
+export async function saveMarks(fullPath: string, bildNr: number, marks: EditableMark[]) {
   try {
     const encoded = encodeURIComponent(fullPath.replaceAll("/", "|"));
-    const res = await fetch(`${BASE_URL}/utils/marks/${encoded}`, {
+    const res = await fetch(`${BASE_URL}/utils/marks/${bildNr}/${encoded}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ marks }),
@@ -46,6 +46,35 @@ export async function saveMarks(fullPath: string, marks: EditableMark[]) {
   } catch (err) {
     console.error(err);
     alert("Fehler beim Speichern.");
+  }
+}
+
+
+export async function fetchMarkVariants(videoPath: string, bildNr: number, all = false): Promise<string[]> {
+  try {
+    const encodedPath = encodeURIComponent(videoPath.replaceAll("/", "|"));
+    const res = await fetch(`${BASE_URL}/utils/markVariants//${bildNr}//${encodedPath}?all=${all}`);
+    if (!res.ok) throw new Error("Fehler beim Laden der Varianten");
+    const data = await res.json();
+    return data.variants || [];
+  } catch (err) {
+    console.error("Fehler bei fetchMarkVariants:", err);
+    return [];
+  }
+}
+
+
+export async function loadMarksWithVariant(videoFullPath: string, variantName: string): Promise<EditableMark[]> {
+  try {
+    const encoded = encodeURIComponent(videoFullPath.replaceAll("/", "|"));
+    const variant = encodeURIComponent(variantName);
+    const res = await fetch(`${BASE_URL}/utils/marks/${encoded}?variant=${variant}`);
+    if (!res.ok) throw new Error("Fehler beim Laden");
+    const data = await res.json();
+    return data.marks || [];
+  } catch (err) {
+    console.error(err);
+    return [];
   }
 }
 
