@@ -11,15 +11,22 @@ export interface Mark {
     background?: string;
   }
   
+  
   export interface FileEntry {
     name: string;
-    isFolder: boolean;
     fullPath: string;
+    isFolder: boolean;
+    sizeMB: string;
+    specs?: {
+      width?: number | string;
+      height?: number | string;
+      fps?: number;
+      frames?: string;
+      duration?: string;
+    };
     children?: FileEntry[];
-    marks?: Mark[];
     isExpanded?: boolean;
   }
-
 
    export interface SchnittmarkenVariante {
       id: number;

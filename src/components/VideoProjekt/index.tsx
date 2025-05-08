@@ -53,10 +53,23 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
     setMarks([]);
   };
 
+
+
   useEffect(() => {
-    if (selectedFileFullPath && selectedFileType === "video") {
-      loadMarks(selectedFileFullPath).then(setMarks);
-    }
+    if (!selectedFileFullPath || selectedFileType !== "video") return;
+  
+    const loadAktiveMarken = async () => {
+      const result = await loadMarks(selectedFileFullPath);
+      if (result && Array.isArray(result.data)) {
+        setMarks(result.data);
+        setVariantName(result.name);
+        setSelectedMarkenId(result.id);
+      } else {
+        setMarks([]);  // ← leer setzen, wenn ungültig
+      }
+    };
+  
+    loadAktiveMarken();
   }, [selectedFileFullPath, selectedFileType]);
 
 
@@ -91,6 +104,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
       const res = await fetch(`${BASE_URL}/utils/${endpoint}?${query}`);
       const data = await res.json();
       console.log(data);
+      await reloadFileTree(); // <
       alert(`✅ Aktion '${endpoint}' erfolgreich ausgeführt.`);
     } catch (err) {
       console.error(err);
@@ -166,10 +180,6 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
       alert("Fehler beim Laden der Variante.");
     }
   };
-
-
-
-
 
 
   return (
@@ -302,6 +312,22 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
               >
                 🔄 Rotieren (90°)
               </button>
+              <button
+                disabled={isWorking}
+                onClick={() =>
+                  handleVideoAction("adjust_speed", {
+                    video_path: selectedFileFullPath,
+                    output_dir: "_speed",
+                  
+                  })
+                }
+                className={`px-3 py-1 rounded text-white ${
+                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+                }`}
+              >
+                🔄 Timestretch
+              </button>
+
 
               <button
                 disabled={isWorking}

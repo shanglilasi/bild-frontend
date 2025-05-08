@@ -14,24 +14,38 @@ export async function fetchRelatedFiles(bildNr: number) {
   }
 }
 
-export async function loadMarks(videoFullPath: string): Promise<EditableMark[]> {
+export async function loadMarks(videoFullPath: string): Promise<{
+  id: number;
+  name: string;
+  data: EditableMark[];
+} | null> {
   try {
-    const parts = videoFullPath.split("/");
-    const fileName = parts.pop() || "";
-    const nameWithoutExt = fileName.split(".")[0];
-    const markPath = [...parts, nameWithoutExt, `${nameWithoutExt}.mark`].join("/");
-    const encoded = encodeURIComponent(markPath.replaceAll("/", "|"));
-    const res = await fetch(`${BASE_URL}/utils/marks/${encoded}`);
+    const encoded = encodeURIComponent(videoFullPath.replaceAll("/", "|"));
+    const url = `${BASE_URL}/utils/schnittmarkeAktiv/${encoded}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Fehler beim Laden der aktiven Variante");
 
-    if (res.ok) {
-      const data = await res.json();
-      return [...data.marks].sort((a, b) => a.time - b.time);
+    const data = await res.json();
+
+    if (!Array.isArray(data.data)) {
+      console.warn("⚠️ Unerwartetes Format für 'data.data':", data.data);
+      return null;
     }
+
+    return {
+      id: data.id,
+      name: data.name,
+      data: data.data,
+    };
   } catch (err) {
-    console.error("Fehler beim Laden der Marken", err);
+    console.error("Fehler beim Laden der aktiven Marken:", err);
+    return null;
   }
-  return [];
 }
+
+
+
+
 
 export async function saveMarks(fullPath: string, bildNr: number, marks: EditableMark[]) {
   try {
