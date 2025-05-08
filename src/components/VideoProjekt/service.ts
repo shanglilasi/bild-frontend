@@ -1,17 +1,16 @@
 //components/VideoProjekt/service.ts
 import { BASE_URL } from "../../config";
 import { EditableMark } from "./types";
+import { FileEntry } from "./types";
 
-export async function fetchRelatedFiles(bildNr: number) {
-  try {
-    const res = await fetch(`${BASE_URL}/utils/listFilesTree/${bildNr}`);
-    if (!res.ok) throw new Error("Fehler beim Laden der Dateien.");
-    const data = await res.json();
-    return data.entries;
-  } catch (err) {
-    console.error(err);
-    return [];
-  }
+import { groupFilesByRootVideo } from "./groupFilesByRootVideo";
+
+export async function fetchRelatedFiles(nr: string): Promise<FileEntry[]> {
+  const res = await fetch(`${BASE_URL}/utils//listFilesTree/${nr}`);
+  const data = await res.json();
+  const flatEntries = data.entries as FileEntry[];
+  const grouped = groupFilesByRootVideo(flatEntries);
+  return grouped;
 }
 
 export async function loadMarks(videoFullPath: string): Promise<{

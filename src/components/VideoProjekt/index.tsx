@@ -6,7 +6,7 @@ import { getDisplayUrlFromFullPath, formatTime } from "./helper";
 import {
   fetchRelatedFiles,
   loadMarks,
-  saveMarks,
+  //saveMarks,
   
 } from "./service";
 import { EditableMark, FileEntry, VideoProjektProps, SchnittmarkenVariante } from "./types";
@@ -32,7 +32,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
 
 
   useEffect(() => {
-    fetchRelatedFiles(bildNr).then(setRelatedFiles);
+    fetchRelatedFiles(String(bildNr)).then(setRelatedFiles);
   }, [bildNr]);
 
   const handleSelectFile = (fullPath: string) => {
@@ -115,7 +115,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   };
 
   const reloadFileTree = async () => {
-    const files = await fetchRelatedFiles(bildNr);
+    const files = await fetchRelatedFiles(String(bildNr));
     setRelatedFiles(files);
   };
 
