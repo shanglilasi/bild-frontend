@@ -6,14 +6,64 @@ import { FileEntry } from "./types";
 import { groupFilesByRootVideo } from "./groupFilesByRootVideo";
 
 export async function fetchRelatedFiles(nr: string): Promise<FileEntry[]> {
-  const res = await fetch(`${BASE_URL}/utils//listFilesTree/${nr}`);
+  const res = await fetch(`${BASE_URL}/utils/listFilesTree/${nr}`);
   const data = await res.json();
   const flatEntries = data.entries as FileEntry[];
   const grouped = groupFilesByRootVideo(flatEntries);
   return grouped;
 }
 
+
 export async function loadMarks(videoFullPath: string): Promise<{
+  id: number | null;
+  name: string;
+  data: EditableMark[];
+}> {
+  try {
+    const encoded = encodeURIComponent(videoFullPath.replaceAll("/", "|"));
+    const url = `${BASE_URL}/utils/schnittmarkeAktiv/${encoded}`;
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        // Kein aktives Markenset – keine Fehlermeldung, nur leeres Ergebnis
+        return {
+          id: null,
+          name: "",
+          data: [],
+        };
+      }
+      throw new Error("Fehler beim Laden der aktiven Variante");
+    }
+
+    const data = await res.json();
+
+    if (!Array.isArray(data.data)) {
+      console.warn("⚠️ Unerwartetes Format für 'data.data':", data.data);
+      return {
+        id: null,
+        name: "",
+        data: [],
+      };
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      data: data.data,
+    };
+  } catch (err) {
+    console.error("Fehler beim Laden der aktiven Marken:", err);
+    return {
+      id: null,
+      name: "",
+      data: [],
+    };
+  }
+}
+
+
+export async function alt_loadMarks(videoFullPath: string): Promise<{
   id: number;
   name: string;
   data: EditableMark[];

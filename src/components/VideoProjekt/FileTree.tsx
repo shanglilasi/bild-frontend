@@ -10,11 +10,11 @@ interface FileTreeProps {
 const getFileSymbol = (entry: FileEntry, isOpen: boolean): string => {
   const ext = entry.name.toLowerCase();
   if (entry.children && entry.children.length > 0) {
-    return isOpen ? "🎞️" : "🎞️"; // oder ➖/➕
+    return isOpen ? "🎞️" : "🎞️🧪"; // oder ➖/➕
   } else if (ext.endsWith(".jpg") || ext.endsWith(".jpeg") || ext.endsWith(".png")) {
     return "📷";
   } else {
-    return "📄";
+    return "🎞️";
   }
 };
 

@@ -4,7 +4,7 @@ export function groupFilesByRootVideo(flatList: FileEntry[]): FileEntry[] {
   const remaining = [...flatList];
 
   // 1. Finde den Root: der erste .MP4 mit geringster Verzeichnistiefe
-  const mp4s = remaining.filter((f) => f.fullPath.endsWith(".MP4"));
+  const mp4s = remaining.filter((f) => f.fullPath.endsWith(".MP4"));  //auf alle gültigen Dateitypen erweitern
   const minDepth = Math.min(...mp4s.map((f) => f.fullPath.split("/").length));
   const root = mp4s.find((f) => f.fullPath.split("/").length === minDepth);
 

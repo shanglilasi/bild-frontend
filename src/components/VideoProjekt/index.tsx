@@ -21,12 +21,8 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isWorking, setIsWorking] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-
-
-  
   const [markenVarianten, setMarkenVarianten] = useState<SchnittmarkenVariante[]>([]);
   const [selectedMarkenId, setSelectedMarkenId] = useState<number | null>(null);
-
   const [variantName, setVariantName] = useState("");
 
 
@@ -393,7 +389,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
               <div className="w-full mt-6">
 
               <div className="mb-2 flex items-center gap-2">
-  <label className="text-sm font-medium text-gray-700">Marken-Variante:</label>
+  <label className="text-sm font-medium text-gray-700">Aktionsskripte im Projekt:</label>
   <select
   value={selectedMarkenId ?? ''}
   onChange={(e) => {
@@ -416,10 +412,10 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
 
 
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-bold">Zeitmarken speichern!</h4>
+                  <h4 className="font-bold">Aktion speichern!</h4>
                   <input
     type="text"
-    placeholder="Name der Marken-Variante"
+    placeholder="neues Aktionsskript "
     value={variantName}
     onChange={(e) => setVariantName(e.target.value)}
     className="flex-1 border px-2 py-1 rounded text-sm"

@@ -1,31 +1,6 @@
 //components/VideoProjekt/helper.ts
 import { BASE_URL } from "../../config";
 
-export function getFileIcon(fileName: string): string {
-  const ext = fileName.split(".").pop()?.toLowerCase();
-  if (!ext) return "📄";
-
-  switch (ext) {
-    case "mp4":
-    case "mov":
-    case "avi":
-    case "mpg":
-      return "▶️";
-    case "jpg":
-    case "jpeg":
-    case "png":
-    case "gif":
-      return "🌄";
-    case "mark":
-      return "📝";
-    case "pdf":
-    case "txt":
-    case "json":
-      return "📄";
-    default:
-      return "📄";
-  }
-}
 
 export function getDisplayUrlFromFullPath(fullPath: string): string | null {
   const parts = fullPath.split("/Videos/");
