@@ -45,72 +45,57 @@ export default function FileTree({ entry, onSelect, selectedPath,onRefresh }: Fi
 
   return (
     <div className="pl-2">
-      {/* Hauptzeile: Symbol + Name (mit beidem interaktiv) */}
-      <div
-        className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-          isSelected
-            ? "bg-blue-200 text-blue-900 font-semibold"
-            : "hover:bg-gray-100 text-gray-700"
-        }`}
-        title={
-          `${entry.name}` +
-          (entry.specs
-            ? `\nResolution: ${entry.specs.width}x${entry.specs.height}` +
-              `\nFPS: ${entry.specs.fps}` +
-              `\nFrames: ${entry.specs.frames}` +
-              `\nDuration: ${entry.specs.duration}`
-            : "")
-        }
-        onClick={() => onSelect(entry.fullPath)}
-      >
-        <span
-          onClick={(e) => {
-            if (hasChildren) {
-              e.stopPropagation(); // Symbol-Klick nur zum Auf-/Zuklappen
-              setOpen(!open);
-            }
-          }}
-          className="cursor-pointer"
-        >
-        </span>
-        
+      {/* 👇 Nur diese Zeile ist eine `group` */}
+      <div className="relative group">
         <div
-  className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-    isSelected
-      ? "bg-blue-200 text-blue-900 font-semibold"
-      : "hover:bg-gray-100 text-gray-700"
-  }`}
-  title={"gaga"}
-  onClick={() => onSelect(entry.fullPath)}
->
-  <span
-    onClick={(e) => {
-      if (hasChildren) {
-        e.stopPropagation();
-        setOpen(!open);
-      }
-    }}
-    className="cursor-pointer"
-  >
-    {symbol}
-  </span>
-  <span>{getShortName(entry.name, entry.fullPath, entry.sizeMB)}</span>
-
-  {!hasChildren && (
-    <FileTreeActions
-      fullPath={entry.fullPath}
-      name={entry.name}
-      onActionDone={() => { }}
-      onRefresh={onRefresh}
-    />
-  )}
-</div>
-
-
-
+          className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+            isSelected
+              ? "bg-blue-200 text-blue-900 font-semibold"
+              : "hover:bg-gray-100 text-gray-700"
+          }`}
+          onClick={() => onSelect(entry.fullPath)}
+        >
+          <span
+            onClick={(e) => {
+              if (hasChildren) {
+                e.stopPropagation();
+                setOpen(!open);
+              }
+            }}
+            className="cursor-pointer"
+          >
+            {symbol}
+          </span>
+  
+          <span>{getShortName(entry.name, entry.fullPath, entry.sizeMB)}</span>
+  
+          {!hasChildren && (
+            <FileTreeActions
+              fullPath={entry.fullPath}
+              name={entry.name}
+              onActionDone={() => {}}
+              onRefresh={onRefresh}
+            />
+          )}
+        </div>
+  
+        {/* Tooltip: erscheint nur bei Hover dieser einen Zeile */}
+        {(entry.specs || entry.name) && (
+          <div className="absolute top-full left-0 mt-1 z-50 px-2 py-1 bg-black text-white text-xs rounded shadow opacity-0 group-hover:opacity-100 transition whitespace-pre-wrap max-w-xs pointer-events-none">
+            {entry.name}
+            {entry.specs && (
+              <>
+                {`\nResolution: ${entry.specs.width}x${entry.specs.height}`}
+                {`\nFPS: ${entry.specs.fps}`}
+                {`\nFrames: ${entry.specs.frames}`}
+                {`\nDuration: ${entry.specs.duration}`}
+              </>
+            )}
+          </div>
+        )}
       </div>
-
-      {/* Rekursive Darstellung der Children (nur wenn offen) */}
+  
+      {/* Rekursion */}
       {hasChildren && open && (
         <div className="pl-4">
           {entry.children!.map((child, idx) => (
@@ -118,6 +103,7 @@ export default function FileTree({ entry, onSelect, selectedPath,onRefresh }: Fi
               key={idx}
               entry={child}
               onSelect={onSelect}
+              onRefresh={onRefresh}
               selectedPath={selectedPath}
             />
           ))}

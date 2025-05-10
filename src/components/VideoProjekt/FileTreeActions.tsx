@@ -13,13 +13,36 @@ export default function FileTreeActions({ fullPath, name, onActionDone,onRefresh
   const [message, setMessage] = useState<string | null>(null);
   const showMessage = (msg: string) => {
     setMessage(msg);
-    setTimeout(() => setMessage(null), 3000);
+    setTimeout(() => setMessage(null), 777);
   };
+
+  const handleOpenFolder = async () => {
+    try {
+      const encodedPath = fullPath.replaceAll("/", "|");
+      const response = await fetch(
+        `${BASE_URL}/utils/openFolder/${encodeURIComponent(encodedPath)}`,
+        { method: "GET" }
+      );
+      const result = await response.json();
+  
+      if (result.success) {
+        showMessage("📂 Ordner geöffnet");
+      } else {
+        showMessage(`❌ Fehler: ${result.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      showMessage("❌ Netzwerkfehler beim Öffnen des Ordners");
+    }
+  };
+
+
 
   const handleDelete = async () => {
     if (confirm(`Möchtest du die Datei "${name}" wirklich löschen?`)) {
       try {
-        const response = await fetch(`${BASE_URL}/utils/deletefile/${encodeURIComponent(fullPath)}`, {
+        const encodedPath = fullPath.replaceAll("/", "|");
+        const response = await fetch(`${BASE_URL}/utils/deletefile/${encodeURIComponent(encodedPath)}`, {
           method: "GET",
         });
         const result = await response.json();
@@ -74,7 +97,13 @@ export default function FileTreeActions({ fullPath, name, onActionDone,onRefresh
       ⚙️
       {hovered && (
         <div className="absolute top-full right-0 bg-white border rounded shadow-md p-1 z-10 space-y-1">
-          <button className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1" onClick={handleRename}>
+            <button
+                className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1"
+                onClick={handleOpenFolder}
+            >
+              gehe zu..
+            </button>
+            <button className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1" onClick={handleRename}>
             Umbenennen
           </button>
           <button className="block w-full text-left text-sm hover:bg-red-100 text-red-700 px-2 py-1" onClick={handleDelete}>

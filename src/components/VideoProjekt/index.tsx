@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import FileTree from "./FileTree";
+import VideoActionButtons from "./VideoActionButtons";
 import { getDisplayUrlFromFullPath, formatTime } from "./helper";
 import {
   fetchRelatedFiles,
@@ -11,6 +12,29 @@ import {
 } from "./service";
 import { EditableMark, FileEntry, VideoProjektProps, SchnittmarkenVariante } from "./types";
 import { BASE_URL } from '../../config';
+
+
+const COLOR_EFFECTS = [
+  { value: "null", label: "Kein Effekt" },
+  { value: "hue=s=0", label: "Sättigung = 0 (Schwarzweiß)" },
+  { value: "eq=contrast=1.5", label: "Erhöhter Kontrast" },
+  { value: "eq=brightness=0.1", label: "Helligkeit leicht erhöht" },
+  { value: "eq=brightness=-0.1", label: "Helligkeit leicht gesenkt" },
+  { value: "colorbalance=bs=0.3", label: "Blau verstärkt" },
+  { value: "colorbalance=rs=0.3", label: "Rot verstärkt" },
+  { value: "colorbalance=gs=0.3", label: "Grün verstärkt" },
+  { value: "curves=preset=strong_contrast", label: "Starker Kontrast (Kurven)" },
+  { value: "curves=preset=color_negative", label: "Farbnegativ" },
+  { value: "hue=h=90", label: "Farbton verschoben (90°)" },
+  { value: "hue=s=2", label: "Sättigung verdoppelt" },
+  { value: "hue=s=0.5", label: "Sättigung halbiert" },
+  { value: "colorchannelmixer=.3:.4:.3:0:.3:.4:.3:0:.3:.4:.3", label: "Mischung RGB-Kanäle" },
+  { value: "lutyuv='u=128:v=128'", label: "UV-Kanäle neutralisiert" },
+  { value: "eq=saturation=2.0", label: "Sättigung x2" }
+];
+
+
+
 
 export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   const [relatedFiles, setRelatedFiles] = useState<FileEntry[]>([]);
@@ -25,7 +49,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   const [selectedMarkenId, setSelectedMarkenId] = useState<number | null>(null);
   const [variantName, setVariantName] = useState("");
   const [copied, setCopied] = useState(false);
-
+  const [modalOpenIdx, setModalOpenIdx] = useState<number | null>(null);
 
   useEffect(() => {
     fetchRelatedFiles(String(bildNr)).then(setRelatedFiles);
@@ -210,175 +234,14 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
 
         {/* Action Buttons BELOW FileTree */}
         {selectedFileFullPath && selectedFileType === "video" && (
-          <div className="w-full p-4 bg-gray-100 rounded shadow flex flex-col items-center gap-4">
-            {isWorking && (
-              <div className="text-blue-700 text-sm font-semibold animate-pulse text-center">
-                ⏳ Aktion läuft. Je nach Operation und Länge des Videos – bitte etwas warten...
-              </div>
-            )}
-            <div className="w-full flex flex-wrap gap-2 justify-center">
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("reverse_video", {
-                    video_path: selectedFileFullPath,
-                    output_dir: "_rw",
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                🔁 Reverse
-              </button>
-
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("split_video", {
-                    video_path: selectedFileFullPath,
-                    output_dir: "_c",
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                ✂️ Split
-              </button>
-
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("save_frame", {
-                    video_path: selectedFileFullPath,
-                    output_dir: ".jpeg",
-                    current_time: currentTime,
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                🌄JPG
-              </button>
-
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("convert_bw", {
-                    video_path: selectedFileFullPath,
-                    output_dir: "_SW",
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                <span style={{ color: 'black' }}>Schwarz</span>
-                <span style={{ color: 'white' }}>Weiss</span>
-              </button>
-
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("farbe_col", {
-                    video_path: selectedFileFullPath,
-                    output_dir: "_col",
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                <span style={{ color: 'red' }}>Far</span>
-                <span style={{ color: 'green' }}>be</span>
-                <span style={{ color: 'blue' }}>ff</span>
-                <span style={{ color: 'pink' }}>ekt</span>
-              </button>
-
-
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("convert_mp4", {
-                    video_path: selectedFileFullPath,
-                    output_dir: ".MP4",
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                in MP4
-              </button>
-
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("rotate_video", {
-                    video_path: selectedFileFullPath,
-                    output_dir: "_rot",
-                    angle: 90,
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                🔄 Rotieren (90°)
-              </button>
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("adjust_speed", {
-                    video_path: selectedFileFullPath,
-                    output_dir: "_speed",
-                  
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                🔄 Timestretch
-              </button>
-
-
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("add_overlay", {
-                    video_path: selectedFileFullPath,
-                    output_dir: "_sub",
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                Untertitel
-              </button>
-
-              <button
-                disabled={isWorking}
-                onClick={() =>
-                  handleVideoAction("add_overlay_cut", {
-                    video_path: selectedFileFullPath,
-                    output_dir: "_cl",
-                  })
-                }
-                className={`px-3 py-1 rounded text-white ${
-                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
-                Bereinigen
-              </button>
-            </div>
-          </div>
-        )}
+  <VideoActionButtons
+    selectedFileFullPath={selectedFileFullPath}
+    isWorking={isWorking}
+    currentTime={currentTime}
+    handleVideoAction={handleVideoAction}
+  />
+)}
       </div>
-
       {/* RIGHT SIDE */}
       <div className="w-2/3 p-4 bg-gray-50 rounded shadow flex flex-col items-center justify-center min-h-[300px]">
         {selectedFileUrl ? (
@@ -467,6 +330,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
                     <tr className="bg-gray-200">
                       <th className="p-1">⏱ Zeit</th>
                       <th className="p-1">💬 Kommentar</th>
+                    
                       <th className="p-1">🔠 Größe</th>
                       <th className="p-1">🎨 Farbe</th>
                       <th className="p-1">🖌 Hintergrund</th>
@@ -479,9 +343,24 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
                         <td className="p-1 cursor-pointer text-blue-700" onClick={() => videoRef.current && (videoRef.current.currentTime = mark.time)}>
                           {formatTime(mark.time)}
                         </td>
-                        <td className="p-1">
-                          <input type="text" value={mark.comment} onChange={e => updateMark(idx, { comment: e.target.value })} className="border px-1 w-full" />
+                     
+                        <td className="p-1 flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={mark.comment}
+                            onChange={(e) => updateMark(idx, { comment: e.target.value })}
+                            className="border px-1 w-full"
+                          />
+                          <button
+                            onClick={() => setModalOpenIdx(idx)}
+                            title="Effekt einfügen"
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            🎛
+                          </button>
                         </td>
+
+
                         <td className="p-1">
                           <select value={mark.size || "medium"} onChange={e => updateMark(idx, { size: e.target.value })} className="border px-1 w-full">
                             <option value="small">Klein</option>
@@ -510,6 +389,34 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
         ) : (
           <div className="text-gray-400">Keine Datei ausgewählt</div>
         )}
+
+{modalOpenIdx !== null && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white p-4 rounded shadow max-w-lg w-full">
+      <h3 className="text-lg font-bold mb-2">🎨 Effekt auswählen</h3>
+      <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto text-sm">
+        {COLOR_EFFECTS.map((eff, i) => (
+          <div
+            key={i}
+            onClick={() => {
+              updateMark(modalOpenIdx, { comment: eff.value });
+              setModalOpenIdx(null);
+            }}
+            className="p-2 border rounded hover:bg-blue-100 cursor-pointer"
+          >
+            <div className="font-mono text-xs mb-1">{eff.value}</div>
+            <div>{eff.label}</div>
+          </div>
+        ))}
+      </div>
+      <div className="text-right mt-4">
+        <button onClick={() => setModalOpenIdx(null)} className="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+)}
+
+
       </div>
     </div>
   );
