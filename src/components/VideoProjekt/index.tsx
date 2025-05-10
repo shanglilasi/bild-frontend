@@ -24,7 +24,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   const [markenVarianten, setMarkenVarianten] = useState<SchnittmarkenVariante[]>([]);
   const [selectedMarkenId, setSelectedMarkenId] = useState<number | null>(null);
   const [variantName, setVariantName] = useState("");
-
+  const [copied, setCopied] = useState(false);
 
 
   useEffect(() => {
@@ -199,6 +199,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
                 key={idx}
                 entry={entry}
                 onSelect={handleSelectFile}
+                onRefresh={reloadFileTree} // 👈 HIER
                 selectedPath={selectedFileFullPath ?? undefined}
               />
             ))}
@@ -277,6 +278,25 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
                 <span style={{ color: 'black' }}>Schwarz</span>
                 <span style={{ color: 'white' }}>Weiss</span>
               </button>
+
+              <button
+                disabled={isWorking}
+                onClick={() =>
+                  handleVideoAction("farbe_col", {
+                    video_path: selectedFileFullPath,
+                    output_dir: "_col",
+                  })
+                }
+                className={`px-3 py-1 rounded text-white ${
+                  isWorking ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+                }`}
+              >
+                <span style={{ color: 'red' }}>Far</span>
+                <span style={{ color: 'green' }}>be</span>
+                <span style={{ color: 'blue' }}>ff</span>
+                <span style={{ color: 'pink' }}>ekt</span>
+              </button>
+
 
               <button
                 disabled={isWorking}
@@ -384,7 +404,22 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
               <div className="mt-3 text-sm text-gray-700">
                 <p>⏱ Aktuelle Position: {formatTime(currentTime)}</p>
               </div>
-
+              {selectedFileFullPath && (
+  <div className="mt-2 text-xs text-gray-500 text-center break-words">
+    <span
+      onClick={() => {
+        navigator.clipboard.writeText(selectedFileFullPath || "");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="cursor-pointer hover:text-gray-700 transition"
+      title="Klicken zum Kopieren"
+    >
+      Pfad: {selectedFileFullPath}
+    </span>
+    {copied && <div className="text-green-600 mt-1">✅ Kopiert!</div>}
+  </div>
+)}
 
               <div className="w-full mt-6">
 

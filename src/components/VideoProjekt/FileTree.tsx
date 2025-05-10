@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { FileEntry } from "./types";
+import FileTreeActions from "./FileTreeActions"; // Import hinzufügen
+
 
 interface FileTreeProps {
   entry: FileEntry;
   onSelect: (fullPath: string) => void;
+  onRefresh?: () => void;
   selectedPath?: string;
 }
 
@@ -18,7 +21,7 @@ const getFileSymbol = (entry: FileEntry, isOpen: boolean): string => {
   }
 };
 
-export default function FileTree({ entry, onSelect, selectedPath }: FileTreeProps) {
+export default function FileTree({ entry, onSelect, selectedPath,onRefresh }: FileTreeProps) {
   const [open, setOpen] = useState(entry.isExpanded ?? false);
   const isSelected = selectedPath === entry.fullPath;
   const hasChildren = entry.children && entry.children.length > 0;
@@ -69,9 +72,42 @@ export default function FileTree({ entry, onSelect, selectedPath }: FileTreeProp
           }}
           className="cursor-pointer"
         >
-          {symbol}
         </span>
-        <span>{getShortName(entry.name, entry.fullPath, entry.sizeMB)}</span>
+        
+        <div
+  className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+    isSelected
+      ? "bg-blue-200 text-blue-900 font-semibold"
+      : "hover:bg-gray-100 text-gray-700"
+  }`}
+  title={"gaga"}
+  onClick={() => onSelect(entry.fullPath)}
+>
+  <span
+    onClick={(e) => {
+      if (hasChildren) {
+        e.stopPropagation();
+        setOpen(!open);
+      }
+    }}
+    className="cursor-pointer"
+  >
+    {symbol}
+  </span>
+  <span>{getShortName(entry.name, entry.fullPath, entry.sizeMB)}</span>
+
+  {!hasChildren && (
+    <FileTreeActions
+      fullPath={entry.fullPath}
+      name={entry.name}
+      onActionDone={() => { }}
+      onRefresh={onRefresh}
+    />
+  )}
+</div>
+
+
+
       </div>
 
       {/* Rekursive Darstellung der Children (nur wenn offen) */}

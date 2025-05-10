@@ -13,7 +13,7 @@
     "@headlessui/react": "^2.2.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.9.2",
-    "lucide-react": "^0.503.0",
+    "lucide-react": "^0.509.0",
     "mobx": "^6.13.7",
     "mobx-react": "^9.2.0",
     "mobx-react-lite": "^4.1.0",

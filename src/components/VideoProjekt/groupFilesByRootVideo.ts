@@ -36,7 +36,7 @@ function collectChildrenRecursively(parent: FileEntry, list: FileEntry[]): FileE
 
   for (const child of children) {
     removeEntry(list, child.fullPath);
-    const childBase = child.fullPath.replace(/\.(MP4|jpg)$/i, "");
+    //const childBase = child.fullPath.replace(/\.(MP4|jpg)$/i, "");
 
     // Rekursiv alle Kinder des aktuellen Eintrags finden
     const subChildren = collectChildrenRecursively(child, list);
