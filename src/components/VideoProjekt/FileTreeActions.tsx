@@ -101,13 +101,13 @@ export default function FileTreeActions({ fullPath, name, onActionDone,onRefresh
                 className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1"
                 onClick={handleOpenFolder}
             >
-              gehe zu..
+              📂Öffnen
             </button>
             <button className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1" onClick={handleRename}>
-            Umbenennen
+            🔄Umbenennen
           </button>
           <button className="block w-full text-left text-sm hover:bg-red-100 text-red-700 px-2 py-1" onClick={handleDelete}>
-            Löschen
+          🗑️Löschen
           </button>
         </div>
       )}

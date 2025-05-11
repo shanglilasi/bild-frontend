@@ -9,13 +9,14 @@ interface FileTreeProps {
   onRefresh?: () => void;
   selectedPath?: string;
 }
-
 const getFileSymbol = (entry: FileEntry, isOpen: boolean): string => {
   const ext = entry.name.toLowerCase();
   if (entry.children && entry.children.length > 0) {
     return isOpen ? "🎞️" : "🎞️🧪"; // oder ➖/➕
   } else if (ext.endsWith(".jpg") || ext.endsWith(".jpeg") || ext.endsWith(".png")) {
     return "📷";
+  } else if (ext.endsWith(".mp3") || ext.endsWith(".m4a")) {
+    return "🎧";
   } else {
     return "🎞️";
   }
