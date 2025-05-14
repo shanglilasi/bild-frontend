@@ -13,6 +13,10 @@ interface Kategorie {
 }
 
 export default function PIC({ data }: { data: BildData }) {
+  const videoExtensions = ['.mp4', '.avi', '.mov', '.webm', '.mkv']
+  const isVideo = data.typ === 'V' || videoExtensions.some(ext => data.url.toLowerCase().endsWith(ext))
+
+
   const [visible, setVisible] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const [animatingOut, setAnimatingOut] = useState(false)
@@ -20,7 +24,7 @@ export default function PIC({ data }: { data: BildData }) {
   const [fullscreenType, setFullscreenType] = useState<"image" | "video">("image")
   const [fullscreenUrl, setFullscreenUrl] = useState("")
   const ref = useRef<HTMLDivElement>(null)
-  const isVideo = data.url.endsWith(".mp4") || data.typ === "V"
+ 
   const [kategorien, setKategorien] = useState<Kategorie[]>([])
   
 
@@ -177,13 +181,14 @@ export default function PIC({ data }: { data: BildData }) {
               <video
                 src={fullscreenUrl}
                 controls
-                autoPlay
+                title="Kein autoplay"
                 className="max-w-full max-h-screen rounded"
               />
             ) : (
               <img
                 src={fullscreenUrl}
                 alt="Vollbildansicht"
+              
                 className="max-w-full max-h-screen rounded"
               />
             )}

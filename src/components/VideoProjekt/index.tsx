@@ -209,12 +209,12 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
         {/* FileTree Container */}
         <div className="max-h-[600px] overflow-auto p-4 bg-white rounded shadow">
           <h3 className="text-lg font-bold mb-4">
-            Ableger des Videos
+          🧬Ableger des Videos
             <button
               onClick={reloadFileTree}
               className="ml-2 bg-gray-300 hover:bg-gray-400 text-sm px-2 py-1 rounded"
             >
-              🔄 refresh
+              🔄
             </button>
           </h3>
           <div className="space-y-2">

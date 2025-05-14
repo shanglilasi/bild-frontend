@@ -66,7 +66,7 @@ export default function BildBeschreibungModal({
   const loadBild = async (nummer: number) => {
     const res = await fetch(`${BASE_URL}/bilder/bild/${nummer}`)
     const data = await res.json()
-    const url = `${BASE_URL}/utils/images/${data.bild.pfad}/${data.bild.datei}`
+    const url = `${BASE_URL}/utils/images/${data.bild.pfad}${data.bild.datei}`
     const loaded: BildData = {
       NR: data.bild.NR,
       datei:data.bild.datei?? '',
@@ -311,7 +311,8 @@ export default function BildBeschreibungModal({
 )}
   {/* Bildanzeige – passt sich Quer- und Hochformat korrekt an */}
   <div className="w-full max-w-3xl mx-auto bg-gray-100 flex items-center justify-center overflow-hidden rounded">
-  {bild.typ === "V" || bild.url.endsWith(".mp4") ? (
+  {bild.typ === "V"  ? (
+  
       <video
           src={bild.url.replace("/images/", "/videos/")}
           controls

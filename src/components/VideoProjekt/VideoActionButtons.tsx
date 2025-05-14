@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 interface VideoActionButtonsProps {
   selectedFileFullPath: string;
@@ -29,7 +29,7 @@ const actions = [
     endpoint: "save_frame",
     params: (path: string, time: number) => ({
       video_path: path,
-      output_dir: ".jpeg",
+      
       current_time: time,
     }),
   },
@@ -120,7 +120,7 @@ export default function VideoActionButtons({
                   typeof action.params === "function"
                     ? action.endpoint === "save_frame"
                       ? action.params(selectedFileFullPath, currentTime)
-                      : action.params(selectedFileFullPath)
+                      : action.params(selectedFileFullPath, currentTime)
                     : {}
                 )
               }
