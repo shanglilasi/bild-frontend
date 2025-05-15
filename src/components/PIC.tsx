@@ -129,7 +129,7 @@ export default function PIC({ data }: { data: BildData }) {
           ⬈
         </a>
       </div>
-
+      <p><strong>NR:</strong>{data.NR}</p>
       <p><strong>Titel:</strong> {data.titel}</p>
       <p><strong>Datum:</strong> {data.datum}</p>
       <p><strong>Kamera:</strong> {data.kamera}</p>

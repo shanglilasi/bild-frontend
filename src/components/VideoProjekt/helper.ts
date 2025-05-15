@@ -3,21 +3,19 @@ import { BASE_URL } from "../../config";
 
 
 export function getDisplayUrlFromFullPath(fullPath: string): string | null {
-  const parts = fullPath.split("/Videos/");
-  if (parts.length < 2) return null;
-
-  const relativePath = `Videos/${parts[1]}`;
-  const extension = relativePath.split(".").pop()?.toLowerCase();
+  
+  fullPath = fullPath.replace("/Volumes/Bilder/","").replace("//","/")
+  
+  const extension = fullPath.split(".").pop()?.toLowerCase();
   if (!extension) return null;
-
   if (["mp4", "mov", "avi", "mpg", "jpg", "jpeg", "png", "gif"].includes(extension)) {
-    return `${BASE_URL}/utils/videos/${relativePath}`;
+    return `${BASE_URL}/utils/videos/${fullPath}`;
   } else {
     return null;
   }
 }
 
-export function gehtnicht_getDisplayUrlFromFullPath(fullPath: string): string | null {
+export function gehtnichtgetDisplayUrlFromFullPath(fullPath: string): string | null {
   const relativePath = fullPath.includes("/Videos/")
     ? fullPath.split("/Videos/")[1]
     : fullPath.split("/")[fullPath.split("/").length - 1]; // letzte Komponente
