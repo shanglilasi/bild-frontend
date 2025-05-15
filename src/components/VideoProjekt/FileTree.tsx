@@ -54,19 +54,26 @@ export default function FileTree({ entry, onSelect, selectedPath,onRefresh }: Fi
               ? "bg-blue-200 text-blue-900 font-semibold"
               : "hover:bg-gray-100 text-gray-700"
           }`}
-          onClick={() => onSelect(entry.fullPath)}
+          
+          onClick={() => {
+            console.log("✅ onSelect triggered via ROW:", entry.fullPath);
+            onSelect(entry.fullPath);
+          }}
         >
-          <span
-            onClick={(e) => {
-              if (hasChildren) {
-                e.stopPropagation();
-                setOpen(!open);
-              }
-            }}
-            className="cursor-pointer"
-          >
-            {symbol}
-          </span>
+         <span
+  onClick={(e) => {
+    e.stopPropagation(); // immer stoppen, damit es nicht doppelt triggert
+
+    if (hasChildren) {
+      setOpen(!open); // Ordner auf-/zuklappen
+    } else {
+      onSelect(entry.fullPath); // Datei (z. B. Audio) auswählen
+    }
+  }}
+  className="cursor-pointer"
+>
+  {symbol}
+</span>
   
           <span>{getShortName(entry.name, entry.fullPath, entry.sizeMB)}</span>
   
@@ -82,7 +89,8 @@ export default function FileTree({ entry, onSelect, selectedPath,onRefresh }: Fi
   
         {/* Tooltip: erscheint nur bei Hover dieser einen Zeile */}
         {(entry.specs || entry.name) && (
-          <div className="absolute top-full left-0 mt-1 z-50 px-2 py-1 bg-black text-white text-xs rounded shadow opacity-0 group-hover:opacity-100 transition whitespace-pre-wrap max-w-xs pointer-events-none">
+        
+           <div className="absolute top-full left-0 mt-1 z-30 px-2 py-1 bg-black text-white text-xs rounded shadow opacity-0 group-hover:opacity-100 transition pointer-events-none max-w-xs">
             {entry.name}
             {entry.specs && (
               <>

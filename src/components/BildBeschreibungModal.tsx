@@ -31,6 +31,7 @@ export default function BildBeschreibungModal({
   const [ansichtModus, setAnsichtModus] = useState<"normal" | "exif" | "llm">("normal");
   const modalRef = useRef<HTMLDivElement>(null);
   const [showVideoProjekt, setShowVideoProjekt] = useState(false);
+  const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const handleKategorieHinzufuegen = async (katId: string | number) => {
     try {
       await fetch(`${BASE_URL}/bilder/addKat/${bild?.NR}/${katId}`, {
@@ -314,6 +315,7 @@ export default function BildBeschreibungModal({
   {bild.typ === "V"  ? (
   
       <video
+          ref={previewVideoRef}
           src={bild.url.replace("/images/", "/videos/")}
           controls
           autoPlay
@@ -336,11 +338,20 @@ export default function BildBeschreibungModal({
 </div>
 {bild.typ === "V" && (
   <button
-    onClick={() => setShowVideoProjekt(true)}
-    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded"
- >
-    🎬 Details & Kapitel anzeigen
-  </button>
+  onClick={() => {
+    // VIDEO STOPPEN
+    if (previewVideoRef.current) {
+      previewVideoRef.current.pause();
+      previewVideoRef.current.currentTime = 0;
+    }
+
+    // MODAL ÖFFNEN
+    setShowVideoProjekt(true);
+  }}
+  className="mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded"
+>
+  🎬 Details & Kapitel anzeigen
+</button>
 )}
 
 {/* Zusatzinfos: EXIF oder LLM */}

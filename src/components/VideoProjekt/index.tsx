@@ -40,7 +40,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   const [relatedFiles, setRelatedFiles] = useState<FileEntry[]>([]);
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
   const [selectedFileFullPath, setSelectedFileFullPath] = useState<string | null>(null);
-  const [selectedFileType, setSelectedFileType] = useState<"image" | "video" | null>(null);
+  const [selectedFileType, setSelectedFileType] = useState<"image" | "audio" |"video" | null>(null);
   const [marks, setMarks] = useState<EditableMark[]>([]);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isWorking, setIsWorking] = useState(false);
@@ -60,8 +60,10 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
     if (!url) return;
 
     const ext = url.split(".").pop()?.toLowerCase();
-    if (["mp4", "mov", "avi", "mpg"].includes(ext || "")) {
+    if (["mp4","m4v", "mov", "avi", "mpg"].includes(ext || "")) {
       setSelectedFileType("video");
+    } else if (["mp3", "m4a", "wav", "ogg"].includes(ext || "")) {
+      setSelectedFileType("audio");
     } else if (["jpg", "jpeg", "png", "gif"].includes(ext || "")) {
       setSelectedFileType("image");
     } else {
@@ -245,6 +247,17 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
       {/* RIGHT SIDE */}
       <div className="w-2/3 p-4 bg-gray-50 rounded shadow flex flex-col items-center justify-center min-h-[300px]">
         {selectedFileUrl ? (
+
+          selectedFileType === "audio" ? (
+            <audio
+              controls
+              src={selectedFileUrl}
+              className="w-full mt-4"
+            >
+              Dein Browser unterstützt das Audioformat nicht.
+            </audio>
+          ) :
+
           selectedFileType === "video" ? (
             <div className="w-full flex flex-col items-center">
               <video

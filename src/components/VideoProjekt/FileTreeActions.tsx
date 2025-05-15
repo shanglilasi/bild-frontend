@@ -96,7 +96,8 @@ export default function FileTreeActions({ fullPath, name, onActionDone,onRefresh
     >
       ⚙️
       {hovered && (
-        <div className="absolute top-full right-0 bg-white border rounded shadow-md p-1 z-10 space-y-1">
+        <div className="absolute top-full right-0 bg-white border rounded shadow-md p-1 z-50 space-y-1">
+        
             <button
                 className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1"
                 onClick={handleOpenFolder}

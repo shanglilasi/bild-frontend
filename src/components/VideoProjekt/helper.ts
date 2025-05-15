@@ -3,12 +3,13 @@ import { BASE_URL } from "../../config";
 
 
 export function getDisplayUrlFromFullPath(fullPath: string): string | null {
-  
+  //der volle Pfad wird zwar im Frontend angeboten für direkten Zugang, 
+  // aber das Abspielen im Browser erfolgt über den Endpunkt der anderes erwartet
   fullPath = fullPath.replace("/Volumes/Bilder/","").replace("//","/")
   
   const extension = fullPath.split(".").pop()?.toLowerCase();
   if (!extension) return null;
-  if (["mp4", "mov", "avi", "mpg", "jpg", "jpeg", "png", "gif"].includes(extension)) {
+  if (["mp4", "mov", "m4a" ,"avi", "mpg", "jpg", "jpeg", "png", "gif"].includes(extension)) {
     return `${BASE_URL}/utils/videos/${fullPath}`;
   } else {
     return null;
