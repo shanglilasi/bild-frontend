@@ -3,7 +3,7 @@
 import { types, flow, Instance, cast } from "mobx-state-tree"
 import type { BildData } from '../types/Bild'
 import { BASE_URL } from '../config'
-import { UiStore } from './UiStore'
+
 
 // ======================
 // 📦 Modelle
@@ -325,7 +325,7 @@ export const createRootStore = () => {
 
   return {
     ...mstStore,
-    uiStore: new UiStore(), // <- manuell anhängen
+    
   }
 }
 
@@ -334,5 +334,5 @@ export const createRootStore = () => {
 // ======================
 
 export interface IRootStore extends Instance<typeof RootStore> {
-  uiStore: UiStore
+  
 }

@@ -1,11 +1,9 @@
-// components/KategorieForm.tsx
 import { useState, useEffect } from 'react'
 import KategorieCombobox from './KategorieCombobox'
+import KategorieListe from './Kategorieliste'
 import { useStore } from '../store/StoreContext'
 import { BASE_URL } from '../config'
-import KategorieListe from './Kategorieliste'
-import { Zusatzfenster } from '../store/UiStore'
-
+import Modal from './Modal'
 type Kategorie = {
   id: number
   bezeichnung: string
@@ -52,7 +50,9 @@ export default function KategorieForm({
   const [beschreibung, setBeschreibung] = useState('')
   const [hidden, setHidden] = useState(false)
   const [error, setError] = useState('')
-  const { suchStore, uiStore, kategorieStore } = useStore()
+  const [showModal, setShowModal] = useState(false)
+
+  const { suchStore, kategorieStore } = useStore()
 
   useEffect(() => {
     if (initialData) {
@@ -78,6 +78,7 @@ export default function KategorieForm({
 
   const handleSave = () => {
     const isUpdate = !!nr
+
     if (!bezeichnung || !kattyp) {
       setError('Bezeichnung und Kategorietyp sind erforderlich.')
       return
@@ -129,9 +130,7 @@ export default function KategorieForm({
 
     try {
       const promises = treffer.map(bild =>
-        fetch(`${BASE_URL}/bilder/addKat/${bild.NR}/${kat.id}`, {
-          method: "POST"
-        })
+        fetch(`${BASE_URL}/bilder/addKat/${bild.NR}/${kat.id}`, { method: "POST" })
       )
       await Promise.all(promises)
       alert("Kategorie erfolgreich allen Treffern zugewiesen.")
@@ -141,25 +140,8 @@ export default function KategorieForm({
     }
   }
 
-
-
-
-  const toggleKategorieFenster = () => {
-    const fensterId = "kategorien"
-  
-    if (uiStore.hasWindow(fensterId)) {
-      uiStore.closeWindow(fensterId)
-    } else {
-      uiStore.addWindow(
-        new Zusatzfenster(fensterId, () => (
-          <KategorieListe kategorien={kategorieStore.kategorien} />
-        ))
-      )
-    }
-  }
-
   return (
-    <div className="space-y-4 p-4 bg-orange-700 text-white rounded shadow-md">
+    <div className="space-y-4 p-4 bg-orange-700 text-white rounded shadow-md relative">
       {/* Eingabefelder */}
       <div>
         <label className="block font-medium">Bezeichnung</label>
@@ -225,7 +207,6 @@ export default function KategorieForm({
         </button>
       )}
 
-      {/* Buttons */}
       <div className="flex flex-wrap gap-2">
         <button onClick={handleSearch} className="hover:bg-gray-500 text-white px-2 rounded">
           🔍
@@ -238,26 +219,23 @@ export default function KategorieForm({
         </button>
       </div>
 
-      {/* Zusatzfenster öffnen */}
+      {/* Modal-Kategorieliste */}
       <div>
-      <div>
-  <button
-    type="button"
-    onClick={toggleKategorieFenster}
-    className="text-xs underline hover:text-blue-200"
-  >
-    {uiStore.hasWindow("kategorien")
-      ? "Kategorieliste schließen"
-      : "Kategorieliste anzeigen"}
-  </button>
-</div>
-
-
-
-
-
-        
+        <button
+          type="button"
+          onClick={() => setShowModal(true)}
+          className="text-xs underline hover:text-blue-200"
+        >
+          Kategorieliste anzeigen
+        </button>
       </div>
+
+      {showModal && (
+  <Modal onClose={() => setShowModal(false)}>
+    <h2 className="text-lg font-bold mb-4 text-gray-800">Kategorieliste</h2>
+    <KategorieListe kategorien={kategorieStore.kategorien} />
+  </Modal>
+)}
     </div>
   )
 }

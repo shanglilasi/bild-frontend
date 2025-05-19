@@ -4,8 +4,7 @@ import { Outlet } from 'react-router-dom'
 import Navigation from '../Navigation'
 import Sidebar from '../Sidebar'
 import BrowserView from '../../views/BrowserView'
-import { FensterContainer } from '../FensterContainer'
-import { FensterScroller } from '../FensterScroller'
+
 
 import { observer } from 'mobx-react-lite'
 import { useEffect } from 'react'
@@ -45,8 +44,7 @@ const AppLayout = observer(() => {
   ) : (
     <Outlet />
   )}
-  <FensterContainer />
-   <FensterScroller />
+
 </main>
 
 
