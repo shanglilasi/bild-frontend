@@ -2,9 +2,13 @@
 
 import { types, flow, Instance, cast } from "mobx-state-tree"
 import type { BildData } from '../types/Bild'
-import { BASE_URL } from '../config';
+import { BASE_URL } from '../config'
+import { UiStore } from './UiStore'
 
-// 📷 Modelle & Hilfen
+// ======================
+// 📦 Modelle
+// ======================
+
 const Suchwerte = types.model({
   text: types.string,
   von: types.string,
@@ -17,7 +21,7 @@ const Suchwerte = types.model({
 
 const Bild = types.model({
   NR: types.number,
-  datei: types.string, // <=== HINZUFÜGEN
+  datei: types.string,
   titel: types.string,
   datum: types.string,
   kamera: types.string,
@@ -44,12 +48,15 @@ const Fotograf = types.model({
   name: types.string,
 })
 
+// ======================
+// 🔐 AuthStore
+// ======================
 
 const AuthStore = types
   .model("AuthStore", {
     isAuthenticated: types.boolean,
     username: types.string,
-    isLoading: types.boolean, // NEU!
+    isLoading: types.boolean,
   })
   .actions((self) => ({
     login(username: string) {
@@ -67,10 +74,10 @@ const AuthStore = types
       }
       self.isAuthenticated = false
       self.username = ""
-      window.location.href = "/login" // wichtig!
+      window.location.href = "/login"
     }),
     checkSession: flow(function* () {
-      self.isLoading = true // Ladevorgang beginnt
+      self.isLoading = true
       try {
         const res = yield fetch('/login/status', {
           method: 'GET',
@@ -83,20 +90,18 @@ const AuthStore = types
         self.isAuthenticated = false
         self.username = ''
       } finally {
-        self.isLoading = false // Ladevorgang beendet
+        self.isLoading = false
       }
     }),
   }))
 
-
-
-
-
+// ======================
+// 🔄 Helper
+// ======================
 
 function transformBackendBild(item: any): BildData {
   const pfad = (item.pfad ?? '').replace(/\\/g, '/').replace(/\/+/g, '/')
   const datei = (item.datei ?? '').replace(/\\/g, '/')
-
   return {
     NR: item.NR,
     titel: item.STICHWORTE ?? '',
@@ -110,7 +115,10 @@ function transformBackendBild(item: any): BildData {
   }
 }
 
+// ======================
 // 🔍 SuchStore
+// ======================
+
 const SuchStore = types
   .model("SuchStore", {
     values: Suchwerte,
@@ -123,7 +131,7 @@ const SuchStore = types
     }),
     view: types.maybeNull(types.string),
     mainView: types.maybeNull(types.string),
-    verwaltungTab: types.enumeration(["ordner", "videoeditor","bilder", "reports"]),
+    verwaltungTab: types.enumeration(["ordner", "videoeditor", "bilder", "reports"]),
   })
   .actions((self) => ({
     setValues(values: Partial<typeof self.values>) {
@@ -149,15 +157,13 @@ const SuchStore = types
     setMainView(view: string | null) {
       self.mainView = view
     },
-    setVerwaltungTab(tab: "ordner" | "bilder" | "reports"| "videoeditor") {
+    setVerwaltungTab(tab: "ordner" | "bilder" | "reports" | "videoeditor") {
       self.verwaltungTab = tab
     },
     updateBild(updatedBild: BildData) {
       const index = self.results.findIndex((b) => b.NR === updatedBild.NR)
       if (index >= 0) {
         self.results[index] = updatedBild as any
-    
-      
       }
     },
     search: flow(function* (values) {
@@ -197,7 +203,10 @@ const SuchStore = types
     },
   }))
 
-// 📁 KategorieStore
+// ======================
+// 🗂️ KategorieStore
+// ======================
+
 const KategorieStore = types
   .model("KategorieStore", {
     kategorien: types.array(Kategorie),
@@ -259,25 +268,26 @@ const KategorieStore = types
     }),
   }))
 
+// ======================
+// 🧠 RootStore
+// ======================
 
-
-
-
-  
-// 🧠 RootStore-Definition
 export const RootStore = types.model({
   authStore: AuthStore,
   suchStore: SuchStore,
   kategorieStore: KategorieStore,
 })
 
-// 🧪 Initialisierung
-export const createRootStore = () =>
-  RootStore.create({
+// ======================
+// 🧪 createRootStore
+// ======================
+
+export const createRootStore = () => {
+  const mstStore = RootStore.create({
     authStore: {
       isAuthenticated: false,
-      username:"",
-      isLoading: true, // NEU
+      username: "",
+      isLoading: true,
     },
     suchStore: {
       values: {
@@ -313,5 +323,16 @@ export const createRootStore = () =>
     },
   })
 
-// Typ für Store-Zugriff in Context
-export interface IRootStore extends Instance<typeof RootStore> {}
+  return {
+    ...mstStore,
+    uiStore: new UiStore(), // <- manuell anhängen
+  }
+}
+
+// ======================
+// 📌 Typ für Context
+// ======================
+
+export interface IRootStore extends Instance<typeof RootStore> {
+  uiStore: UiStore
+}

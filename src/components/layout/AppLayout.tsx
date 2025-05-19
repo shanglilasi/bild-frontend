@@ -4,7 +4,8 @@ import { Outlet } from 'react-router-dom'
 import Navigation from '../Navigation'
 import Sidebar from '../Sidebar'
 import BrowserView from '../../views/BrowserView'
-
+import { FensterContainer } from '../FensterContainer'
+import { FensterScroller } from '../FensterScroller'
 
 import { observer } from 'mobx-react-lite'
 import { useEffect } from 'react'
@@ -38,11 +39,14 @@ const AppLayout = observer(() => {
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <main className="flex-1 bg-black p-4 overflow-auto space-y-4">
+        <div id="global-overlay-root" />
   {suchStore.view === 'browser' ? (
     <BrowserView />
   ) : (
     <Outlet />
   )}
+  <FensterContainer />
+   <FensterScroller />
 </main>
 
 

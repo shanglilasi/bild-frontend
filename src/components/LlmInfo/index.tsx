@@ -36,19 +36,20 @@ useEffect(() => {
     setAntwort(null)
   }, [bildNr])
 
+  const loadFragen = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/llm/alleFragen`)
+      const data = await res.json()
+      setFragen(data)
+      if (data.length > 0) setSelectedFrage(data[0].id)
+    } catch (err) {
+      console.error("Fehler beim Laden der Fragen:", err)
+    }
+  }
+
+
   // Lade Fragen für das Select-Menü
   useEffect(() => {
-    const loadFragen = async () => {
-      try {
-        const res = await fetch(`${BASE_URL}/llm/alleFragen`)
-        const data = await res.json()
-        setFragen(data)
-        if (data.length > 0) setSelectedFrage(data[0].id)
-      } catch (err) {
-        console.error("Fehler beim Laden der Fragen:", err)
-      }
-    }
-
     loadFragen()
   }, [])
 
