@@ -4,6 +4,8 @@ import KategorieListe from './Kategorieliste'
 import { useStore } from '../store/StoreContext'
 import { BASE_URL } from '../config'
 import Modal from './Modal'
+
+
 type Kategorie = {
   id: number
   bezeichnung: string
@@ -221,19 +223,37 @@ export default function KategorieForm({
 
       {/* Modal-Kategorieliste */}
       <div>
-        <button
-          type="button"
-          onClick={() => setShowModal(true)}
-          className="text-xs underline hover:text-blue-200"
-        >
-          Kategorieliste anzeigen
-        </button>
-      </div>
+  <button
+    type="button"
+    onClick={() => setShowModal((prev) => !prev)}
+    className="text-xs underline hover:text-blue-200"
+  >
+    {showModal ? 'Kategorieliste ist offen' : 'Kategorieliste anzeigen'}
+  </button>
+</div>
+
 
       {showModal && (
   <Modal onClose={() => setShowModal(false)}>
-    <h2 className="text-lg font-bold mb-4 text-gray-800">Kategorieliste</h2>
-    <KategorieListe kategorien={kategorieStore.kategorien} />
+    
+    <KategorieListe
+  kategorien={kategorieStore.kategorien}
+  onSelect={(kat) => {
+    setNr(kat.id)
+    setBezeichnung(kat.bezeichnung)
+    setKattyp(kat.kattyp)
+    setOber(kat.ober?.toString() ?? '')
+    setBeschreibung(kat.beschreibung ?? '')
+    setHidden(kat.hidden === 1)
+    setShowModal(false)
+  }}
+  onAnalyse={(kat) => {
+    alert(`Zeithorizont-Analyse für "${kat.bezeichnung}" folgt…`)
+  }}
+  onView={(kat) => {
+    alert(`Ansicht für "${kat.bezeichnung}" folgt…`)
+  }}
+/>
   </Modal>
 )}
     </div>

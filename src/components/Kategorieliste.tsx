@@ -1,33 +1,50 @@
-//components/Kategorieliste.tsx
-
+// src/components/Kategorieliste.tsx
 import React from "react"
+import KategorieInfo from "./KategorieInfo"
 
-type Kategorie = {
+type KategorieView = {
   id: number
   bezeichnung: string
   kattyp: string
+  beschreibung: string
   ober: number | null
   hidden: number
 }
 
 type Props = {
-  kategorien: Kategorie[]
+  kategorien: KategorieView[]
+  onSelect?: (k: KategorieView) => void
+  onAnalyse?: (k: KategorieView) => void
+  onView?: (k: KategorieView) => void
 }
 
-const KategorieListe: React.FC<Props> = ({ kategorien }) => {
-  // Rekursive Funktion zum Aufbauen der Struktur
-  const renderKategorieTree = (oberId: number | null = 0, level: number = 0): React.ReactElement[] => {
-    return kategorien
-      .filter((kat) => kat.ober === oberId)
-      .map((kat) => (
-        <div key={kat.id} style={{ marginLeft: `${level * 1.5}rem` }}>
-          <span className="font-mono" title={"Nummer " + kat.id +  " innerhalb der Kategorie  " + kat.ober + " . Typ: " + kat.kattyp }>
-           {kat.bezeichnung} {kat.hidden ? "🚫" : ""}
-          </span>
-          {renderKategorieTree(kat.id, level + 1)}
+export function Kategorieliste({
+  kategorien,
+  onSelect,
+  onAnalyse,
+  onView,
+}: Props) {
+  const renderKategorieTree = (
+    oberId: number | null = 0,
+    level: number = 0
+  ): React.ReactElement[] =>
+    kategorien
+      .filter((k) => k.ober === oberId)
+      .map((k) => (
+        <div key={k.id} style={{ marginLeft: `${level * 1.5}rem` }}>
+          <KategorieInfo
+            kategorie={{
+              id: k.id,
+              bezeichnung: k.bezeichnung,
+              beschreibung: k.beschreibung,
+            }}
+            onSelect={onSelect}
+            onAnalyse={onAnalyse}
+            onView={onView}
+          />
+          {renderKategorieTree(k.id, level + 1)}
         </div>
       ))
-  }
 
   return (
     <div className="p-4 bg-white rounded shadow text-sm text-gray-800">
@@ -36,5 +53,4 @@ const KategorieListe: React.FC<Props> = ({ kategorien }) => {
     </div>
   )
 }
-
-export default KategorieListe
+export default Kategorieliste

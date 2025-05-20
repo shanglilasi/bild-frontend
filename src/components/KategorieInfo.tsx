@@ -1,23 +1,65 @@
-// KategorieInfo.tsx
-interface Kategorie {
-    id: number;
-    bezeichnung: string;
-    beschreibung:string;
-  }
+// src/components/KategorieInfo.tsx
 
 
-  export default function KategorieInfo({
-     kategorie,
-  }: {
-  
-    kategorie: Kategorie;
-  }) {
+interface KategorieView {
+  id: number
+  bezeichnung: string
+  beschreibung: string
+}
 
+export default function KategorieInfo({
+  kategorie,
+  onSelect,
+  onAnalyse,
+  onView,
+}: {
+  kategorie: KategorieView
+  onSelect?: (k: KategorieView) => void
+  onAnalyse?: (k: KategorieView) => void
+  onView?: (k: KategorieView) => void
+}) {
+  const hasActions = onSelect || onAnalyse || onView
 
-    // Hier kannst du weitere Logik oder Interaktionen basierend auf `nummer` oder `kategorie` hinzufügen
-    return (
-      <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-2 mb-1"  title={String(kategorie.id) + ':' + kategorie.beschreibung}>
-       {kategorie.bezeichnung}
+  return (
+    <div
+      className="group flex items-center justify-between pr-2 mb-1"
+      title={`${kategorie.id}: ${kategorie.beschreibung}`}
+    >
+      <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-mono">
+        {kategorie.bezeichnung}
       </span>
-    );
-  }
+
+      {hasActions && (
+        <div className="ml-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onSelect && (
+            <button
+              onClick={() => onSelect(kategorie)}
+              className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 rounded px-1"
+              title="Bearbeiten"
+            >
+              ✏️
+            </button>
+          )}
+          {onAnalyse && (
+            <button
+              onClick={() => onAnalyse(kategorie)}
+              className="text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-200 rounded px-1"
+              title="Zeithorizont analysieren"
+            >
+              📈
+            </button>
+          )}
+          {onView && (
+            <button
+              onClick={() => onView(kategorie)}
+              className="text-xs bg-gray-100 text-gray-800 hover:bg-gray-200 rounded px-1"
+              title="Ansicht"
+            >
+              👁️
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

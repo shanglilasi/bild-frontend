@@ -6,7 +6,7 @@ import type { BildData } from "../types/Bild"
 import BildBeschreibungModal from "./BildBeschreibungModal"
 import { BASE_URL } from '../config';
 
-interface Kategorie {
+interface KategorieView {
   id: number
   bezeichnung: string
   beschreibung: string
@@ -138,7 +138,20 @@ export default function PIC({ data }: { data: BildData }) {
       {kategorien.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1 max-h-24 overflow-y-auto">
           {kategorien.map((k: any) => (
-            <KategorieInfo key={k.id || k.bezeichnung} kategorie={k} />
+            
+
+            <KategorieInfo
+            key={k.id || k.bezeichnung}
+            kategorie={{
+              id: k.id,
+              bezeichnung: k.bezeichnung,
+              beschreibung: k.beschreibung ?? '',
+            }}
+          />
+
+
+
+            
           ))}
         </div>
       )}
