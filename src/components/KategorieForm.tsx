@@ -4,16 +4,7 @@ import KategorieListe from './Kategorieliste'
 import { useStore } from '../store/StoreContext'
 import { BASE_URL } from '../config'
 import Modal from './Modal'
-
-
-type Kategorie = {
-  id: number
-  bezeichnung: string
-  kattyp: string
-  beschreibung: string
-  ober: number | null
-  hidden: number
-}
+import type { Kategorie } from '../types/Kategorie'
 
 type KategorieFilter = {
   bezeichnung?: string
@@ -74,7 +65,7 @@ export default function KategorieForm({
       bezeichnung: bezeichnung || undefined,
       kattyp: kattyp || undefined,
       ober: ober ? parseInt(ober) : undefined,
-      hidden: hidden ? 1 : 0,
+   
     })
   }
 

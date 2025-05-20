@@ -1,11 +1,7 @@
 // src/components/KategorieInfo.tsx
 
+import type { Kategorie } from '../types/Kategorie'
 
-interface KategorieView {
-  id: number
-  bezeichnung: string
-  beschreibung: string
-}
 
 export default function KategorieInfo({
   kategorie,
@@ -13,16 +9,16 @@ export default function KategorieInfo({
   onAnalyse,
   onView,
 }: {
-  kategorie: KategorieView
-  onSelect?: (k: KategorieView) => void
-  onAnalyse?: (k: KategorieView) => void
-  onView?: (k: KategorieView) => void
+  kategorie: Kategorie
+  onSelect?: (k: Kategorie) => void
+  onAnalyse?: (k: Kategorie) => void
+  onView?: (k: Kategorie) => void
 }) {
   const hasActions = onSelect || onAnalyse || onView
 
   return (
     <div
-      className="group flex items-center justify-between pr-2 mb-1"
+      className="group flex items-center pr-2 mb-1"
       title={`${kategorie.id}: ${kategorie.beschreibung}`}
     >
       <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-mono">

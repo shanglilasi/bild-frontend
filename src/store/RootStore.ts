@@ -224,7 +224,7 @@ const KategorieStore = types
       self.loading = true
       self.error = null
       try {
-        const res = yield fetch(`${BASE_URL}/kategorien/kategorien`)
+        const res = yield fetch(`${BASE_URL}/kategorien/kategorie`)
         const data = yield res.json()
         self.kategorien = cast(data.map((item: any) => ({
           id: Number(item.id),

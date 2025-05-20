@@ -1,4 +1,4 @@
-//components/KategorieFormSmart.tsx
+// components/KategorieFormSmart.tsx
 import { useState } from 'react'
 import KategorieForm from './KategorieForm'
 import DatensatzNavigation from './DatensatzNavigation'
@@ -6,7 +6,7 @@ import { useStore } from '../store/StoreContext'
 
 export default function KategorieFormSmart() {
   const { kategorieStore } = useStore()
-
+  const [successMsg, setSuccessMsg] = useState('')
   const [treffer, setTreffer] = useState<any[]>([])
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
@@ -32,8 +32,8 @@ export default function KategorieFormSmart() {
 
   const handleSave = async (data: any, isUpdate: boolean) => {
     const url = isUpdate
-      ? `http://localhost:5001/kategorie/kategorien/${data.NR}`
-      : `http://localhost:5001/kategorie/kategorien`
+      ? `http://localhost:5001/kategorien/kategorie/${data.NR}`
+      : `http://localhost:5001/kategorien/kategorie`
 
     const res = await fetch(url, {
       method: isUpdate ? 'PUT' : 'POST',
@@ -51,7 +51,11 @@ export default function KategorieFormSmart() {
     // nach dem Speichern neu laden
     await kategorieStore.loadKategorien()
 
-    // nach Speichern zurück zur Suche
+    // Erfolgsmeldung anzeigen
+    setSuccessMsg('✅ Kategorie erfolgreich gespeichert')
+    setTimeout(() => setSuccessMsg(''), 3000)
+
+    // zurück zur Suche
     setTreffer([])
     setActiveIndex(null)
   }
@@ -60,7 +64,11 @@ export default function KategorieFormSmart() {
 
   return (
     <div className="space-y-2">
-     
+      {successMsg && (
+        <div className="bg-green-600 text-white px-4 py-2 rounded text-sm shadow">
+          {successMsg}
+        </div>
+      )}
 
       <KategorieForm
         kategorien={kategorien}
@@ -92,7 +100,8 @@ export default function KategorieFormSmart() {
           }
         />
       )}
- {treffer.length > 0 && activeIndex !== null && (
+
+      {treffer.length > 0 && activeIndex !== null && (
         <div className="bg-orange-100 text-orange-900 p-2 rounded text-sm flex justify-between items-center">
           Bearbeitung: {treffer[activeIndex].bezeichnung}
           <button
@@ -106,8 +115,6 @@ export default function KategorieFormSmart() {
           </button>
         </div>
       )}
-
-
     </div>
   )
 }

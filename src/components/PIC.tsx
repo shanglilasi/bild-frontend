@@ -5,12 +5,8 @@ import KategorieInfo from "./KategorieInfo"
 import type { BildData } from "../types/Bild"
 import BildBeschreibungModal from "./BildBeschreibungModal"
 import { BASE_URL } from '../config';
+import type { Kategorie } from '../types/Kategorie'
 
-interface KategorieView {
-  id: number
-  bezeichnung: string
-  beschreibung: string
-}
 
 export default function PIC({ data }: { data: BildData }) {
   const videoExtensions = ['.mp4', '.avi', '.mov', '.webm', '.mkv']
@@ -139,16 +135,13 @@ export default function PIC({ data }: { data: BildData }) {
         <div className="mt-1 flex flex-wrap gap-1 max-h-24 overflow-y-auto">
           {kategorien.map((k: any) => (
             
+        <KategorieInfo
+          kategorie={k}
+      
+/>
 
-            <KategorieInfo
-            key={k.id || k.bezeichnung}
-            kategorie={{
-              id: k.id,
-              bezeichnung: k.bezeichnung,
-              beschreibung: k.beschreibung ?? '',
-            }}
-          />
 
+       
 
 
             

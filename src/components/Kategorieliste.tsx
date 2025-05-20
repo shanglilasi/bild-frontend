@@ -1,21 +1,15 @@
 // src/components/Kategorieliste.tsx
 import React from "react"
 import KategorieInfo from "./KategorieInfo"
+import type { Kategorie } from '../types/Kategorie'
 
-type KategorieView = {
-  id: number
-  bezeichnung: string
-  kattyp: string
-  beschreibung: string
-  ober: number | null
-  hidden: number
-}
+
 
 type Props = {
-  kategorien: KategorieView[]
-  onSelect?: (k: KategorieView) => void
-  onAnalyse?: (k: KategorieView) => void
-  onView?: (k: KategorieView) => void
+  kategorien: Kategorie[]
+  onSelect?: (k: Kategorie) => void
+  onAnalyse?: (k: Kategorie) => void
+  onView?: (k: Kategorie) => void
 }
 
 export function Kategorieliste({
@@ -32,15 +26,13 @@ export function Kategorieliste({
       .filter((k) => k.ober === oberId)
       .map((k) => (
         <div key={k.id} style={{ marginLeft: `${level * 1.5}rem` }}>
-          <KategorieInfo
-            kategorie={{
-              id: k.id,
-              bezeichnung: k.bezeichnung,
-              beschreibung: k.beschreibung,
-            }}
+          
+            <KategorieInfo
+            kategorie={k}
             onSelect={onSelect}
             onAnalyse={onAnalyse}
             onView={onView}
+        
           />
           {renderKategorieTree(k.id, level + 1)}
         </div>
@@ -48,7 +40,7 @@ export function Kategorieliste({
 
   return (
     <div className="p-4 bg-white rounded shadow text-sm text-gray-800">
-      <h2 className="text-lg font-bold mb-2">Kategorien (hierarchisch)</h2>
+    
       {renderKategorieTree()}
     </div>
   )
