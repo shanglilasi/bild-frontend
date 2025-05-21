@@ -14,6 +14,7 @@ export default function Navigation() {
   const navLinks = [
     { to: '/bilder', label: 'Bilder', view: 'bilder' },
     { to: '/abfragen', label: 'Verwalten', view: 'verwaltung' },
+    { to: '/ahnen', label: 'Familie', view: 'Familie' },
   ]
 
   return (

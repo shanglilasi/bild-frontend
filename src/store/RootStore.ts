@@ -1,13 +1,25 @@
 // src/store/RootStore.ts
 
-import { types, flow, Instance, cast } from "mobx-state-tree"
+import { types, flow, Instance, cast, clone } from "mobx-state-tree"
 import type { BildData } from '../types/Bild'
 import { BASE_URL } from '../config'
-
 
 // ======================
 // 📦 Modelle
 // ======================
+
+const Person = types.model({
+  id: types.number,
+  name: types.string,
+  geb_dat: types.maybeNull(types.string),
+  geb_name: types.maybeNull(types.string),
+  geschlecht: types.maybeNull(types.string),
+  geburtsjahr: types.maybeNull(types.string),
+  beruf: types.maybeNull(types.string),
+  notizen: types.maybeNull(types.string),
+})
+
+
 
 const Suchwerte = types.model({
   text: types.string,
@@ -47,6 +59,26 @@ const Kamera = types.model({
 const Fotograf = types.model({
   name: types.string,
 })
+
+const FamilienStore = types
+  .model("FamilienStore", {
+    treffer: types.array(Person),
+    selected: types.maybeNull(Person),
+  })
+  .actions((self) => ({
+    search: flow(function* (query: string) {
+      try {
+        const res = yield fetch(`${BASE_URL}/ahnen/suche/${encodeURIComponent(query)}`)
+        const data = yield res.json()
+        self.treffer = data
+      } catch (err) {
+        console.error("Familiensuche fehlgeschlagen", err)
+      }
+    }),
+    selectPerson(person: any) {
+      self.selected = clone(person)
+    },
+  }))
 
 // ======================
 // 🔐 AuthStore
@@ -276,6 +308,7 @@ export const RootStore = types.model({
   authStore: AuthStore,
   suchStore: SuchStore,
   kategorieStore: KategorieStore,
+  familienStore: FamilienStore, // ✅ eingebunden
 })
 
 // ======================
@@ -321,18 +354,17 @@ export const createRootStore = () => {
       fotografenLoading: false,
       fotografenError: null,
     },
+    familienStore: {
+      treffer: [],
+      selected: null,
+    },
   })
 
-  return {
-    ...mstStore,
-    
-  }
+  return mstStore
 }
 
 // ======================
 // 📌 Typ für Context
 // ======================
 
-export interface IRootStore extends Instance<typeof RootStore> {
-  
-}
+export interface IRootStore extends Instance<typeof RootStore> {}

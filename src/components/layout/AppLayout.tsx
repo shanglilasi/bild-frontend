@@ -3,25 +3,12 @@
 import { Outlet } from 'react-router-dom'
 import Navigation from '../Navigation'
 import Sidebar from '../Sidebar'
-import BrowserView from '../../views/BrowserView'
-
-
 import { observer } from 'mobx-react-lite'
-import { useEffect } from 'react'
-import { useStore } from '../../store/StoreContext'
-
-// imports ergänzen
 import { useState } from 'react'
 import { Menu } from 'lucide-react'
 
 const AppLayout = observer(() => {
-  const { suchStore } = useStore()
-  const [sidebarOpen, setSidebarOpen] = useState(false) // ⬅️ Zustand für Sidebar
-
-  useEffect(() => {
-    console.log("View:", suchStore.view)
-    console.log("Results:", suchStore.results)
-  }, [suchStore.view, suchStore.results])
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="flex flex-col h-screen">
@@ -36,18 +23,10 @@ const AppLayout = observer(() => {
 
       <div className="flex flex-1 overflow-hidden relative">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
         <main className="flex-1 bg-black p-4 overflow-auto space-y-4">
-        <div id="global-overlay-root" />
-  {suchStore.view === 'browser' ? (
-    <BrowserView />
-  ) : (
-    <Outlet />
-  )}
-
-</main>
-
-
+          <div id="global-overlay-root" />
+          <Outlet />
+        </main>
       </div>
     </div>
   )

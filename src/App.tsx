@@ -1,4 +1,6 @@
-// App.tsx
+// src/App.tsx
+
+// src/App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import BildVerwaltungPage from './pages/BildVerwaltungPage'
@@ -6,12 +8,17 @@ import DatenbankAbfragePage from './pages/DatenbankAbfragePage'
 import KategorieManagerView from './views/KategorieManagerView'
 import LoginPage from './components/LoginPage'
 import ProtectedRoute from './components/ProtectedRoute'
-import RegisterForm from './components/RegisterForm' 
+import RegisterForm from './components/RegisterForm'
+import FamilienView from './views/FamilienView'
+import PersonViewWrapper from './views/PersonViewWrapper'
+import BrowserView from './views/BrowserView'
+
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterForm />} />
+
       <Route
         element={
           <ProtectedRoute>
@@ -21,9 +28,11 @@ function App() {
       >
         <Route path="/" element={<Navigate to="/bilder" />} />
         <Route path="/bilder" element={<BildVerwaltungPage />} />
+        <Route path="/browser" element={<BrowserView />} />
         <Route path="/abfragen" element={<DatenbankAbfragePage />} />
         <Route path="/kategorien" element={<KategorieManagerView />} />
-        
+        <Route path="/person/:id" element={<PersonViewWrapper />} />
+        <Route path="/ahnen" element={<FamilienView />} />
       </Route>
     </Routes>
   )
