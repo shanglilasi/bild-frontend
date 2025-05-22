@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = observer(({ isOpen = false, onClose = ()
   const translateClass = isOpen ? 'translate-x-0' : '-translate-x-full'
 
   const isPath = (path: string) => location.pathname === path
-
+  const isAhnenPath = location.pathname.startsWith('/ahnen')
   const sidebarContent = (
     <div className="p-4 space-y-4 overflow-y-auto h-full">
       <div className="md:hidden text-right">
@@ -124,9 +124,9 @@ const Sidebar: React.FC<SidebarProps> = observer(({ isOpen = false, onClose = ()
         </div>
       )}
 
-      {isPath('/ahnen') && (
-        <FamilienSuche />
-      )}
+
+  {isAhnenPath && <FamilienSuche />}
+      
     </div>
   )
 

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react"
-import { BASE_URL } from '../config';
+import { BASE_URL } from '../config'
+import PersonElement from './PersonElement'
+
 type Person = {
   id: number
   name: string
@@ -73,7 +75,7 @@ export default function PersonView({ initialPersonId }: Props) {
   if (!personData || !formData) return <div>Lade...</div>
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 text-black">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">
           {editMode ? (
@@ -90,7 +92,7 @@ export default function PersonView({ initialPersonId }: Props) {
           {editMode ? "Abbrechen" : "Bearbeiten"}
         </button>
       </div>
-Gagagagagagagag
+
       {editMode ? (
         <>
           <div className="space-y-2">
@@ -114,31 +116,33 @@ Gagagagagagagag
               </select>
             </label>
 
-            <label>Vater:
-              <select
-                className="block border px-2 py-1 w-full"
-                value={formData.fatherId || ""}
-                onChange={e => setFormData({ ...formData, fatherId: parseInt(e.target.value) || "" })}
-              >
-                <option value="">(unbekannt)</option>
-                {allPersons.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </label>
+            <div className="flex gap-4">
+              <label className="flex-1">Vater:
+                <select
+                  className="block border px-2 py-1 w-full"
+                  value={formData.fatherId || ""}
+                  onChange={e => setFormData({ ...formData, fatherId: parseInt(e.target.value) || "" })}
+                >
+                  <option value="">(unbekannt)</option>
+                  {allPersons.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </label>
 
-            <label>Mutter:
-              <select
-                className="block border px-2 py-1 w-full"
-                value={formData.motherId || ""}
-                onChange={e => setFormData({ ...formData, motherId: parseInt(e.target.value) || "" })}
-              >
-                <option value="">(unbekannt)</option>
-                {allPersons.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </label>
+              <label className="flex-1">Mutter:
+                <select
+                  className="block border px-2 py-1 w-full"
+                  value={formData.motherId || ""}
+                  onChange={e => setFormData({ ...formData, motherId: parseInt(e.target.value) || "" })}
+                >
+                  <option value="">(unbekannt)</option>
+                  {allPersons.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
 
           <div>
@@ -156,19 +160,33 @@ Gagagagagagagag
         </>
       ) : (
         <div className="space-y-4">
+          <div className="flex gap-4">
+            <div>
+              <strong>Vater:</strong>{" "}
+              {personData.father ? (
+                <PersonElement id={personData.father.id} name={personData.father.name} />
+              ) : "(unbekannt)"}
+            </div>
+            <div>
+              <strong>Mutter:</strong>{" "}
+              {personData.mother ? (
+                <PersonElement id={personData.mother.id} name={personData.mother.name} />
+              ) : "(unbekannt)"}
+            </div>
+          </div>
+
           <div><strong>Geboren:</strong> {personData.birthDate}</div>
           <div><strong>Geschlecht:</strong> {
             personData.gender === "m" ? "männlich" :
             personData.gender === "w" ? "weiblich" : "divers"
           }</div>
-          <div><strong>Vater:</strong> {personData.father?.name || "(unbekannt)"}</div>
-          <div><strong>Mutter:</strong> {personData.mother?.name || "(unbekannt)"}</div>
 
           <div>
             <h3 className="font-semibold mt-4">Beschreibung:</h3>
-            <div className="whitespace-pre-line bg-gray-100 p-2 rounded border text-sm">
-              {personData.bio || "—"}
-            </div>
+            <div
+              className="whitespace-pre-line bg-gray-100 p-2 rounded border text-sm"
+              dangerouslySetInnerHTML={{ __html: personData.bio || "—" }}
+            />
           </div>
 
           {Array.isArray(personData.partners) && personData.partners.length > 0 && (
@@ -176,7 +194,10 @@ Gagagagagagagag
               <h3 className="font-semibold mt-4">Partner und Kinder:</h3>
               {personData.partners.map((partner) => (
                 <div key={partner.id} className="mb-4">
-                  <div><strong>Partner:</strong> {partner.name}</div>
+                  <div>
+                    <strong>Partner:</strong>{" "}
+                    <PersonElement id={partner.id} name={partner.name} />
+                  </div>
                   <div><em>{partner.description}</em></div>
 
                   {Array.isArray(partner.children) && partner.children.length > 0 && (
@@ -184,7 +205,9 @@ Gagagagagagagag
                       <strong>Kinder:</strong>
                       <ul className="list-disc list-inside">
                         {partner.children.map(child => (
-                          <li key={child.id}>{child.name}</li>
+                          <li key={child.id}>
+                            <PersonElement id={child.id} name={child.name} />
+                          </li>
                         ))}
                       </ul>
                     </div>
