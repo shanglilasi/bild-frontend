@@ -1,6 +1,4 @@
-// src/store/RootStore.ts
-
-import { types, flow, Instance, cast, clone } from "mobx-state-tree"
+import { types, flow, Instance, cast,clone } from "mobx-state-tree"
 import type { BildData } from '../types/Bild'
 import { BASE_URL } from '../config'
 
@@ -18,8 +16,6 @@ const Person = types.model({
   beruf: types.maybeNull(types.string),
   notizen: types.maybeNull(types.string),
 })
-
-
 
 const Suchwerte = types.model({
   text: types.string,
@@ -63,7 +59,7 @@ const Fotograf = types.model({
 const FamilienStore = types
   .model("FamilienStore", {
     treffer: types.array(Person),
-    selected: types.maybeNull(Person),
+    selected: types.maybeNull(Person), // 🧠 aktuell ausgewählte Person
   })
   .actions((self) => ({
     search: flow(function* (query: string) {
@@ -76,7 +72,7 @@ const FamilienStore = types
       }
     }),
     selectPerson(person: any) {
-      self.selected = clone(person)
+      self.selected = clone(person) // wichtig: clone() erzeugt einen MobX-kompatiblen Wert
     },
   }))
 
@@ -161,8 +157,6 @@ const SuchStore = types
       kamera: types.string,
       kategorie: types.string,
     }),
-    view: types.maybeNull(types.string),
-    mainView: types.maybeNull(types.string),
     verwaltungTab: types.enumeration(["ordner", "videoeditor", "bilder", "reports"]),
   })
   .actions((self) => ({
@@ -182,12 +176,6 @@ const SuchStore = types
     },
     setFilter(name: "kamera" | "kategorie", value: string) {
       self.activeFilters[name] = value
-    },
-    setView(view: string | null) {
-      self.view = view
-    },
-    setMainView(view: string | null) {
-      self.mainView = view
     },
     setVerwaltungTab(tab: "ordner" | "bilder" | "reports" | "videoeditor") {
       self.verwaltungTab = tab
@@ -308,7 +296,7 @@ export const RootStore = types.model({
   authStore: AuthStore,
   suchStore: SuchStore,
   kategorieStore: KategorieStore,
-  familienStore: FamilienStore, // ✅ eingebunden
+  familienStore: FamilienStore,
 })
 
 // ======================
@@ -339,8 +327,6 @@ export const createRootStore = () => {
         kamera: "",
         kategorie: "",
       },
-      view: null,
-      mainView: null,
       verwaltungTab: "ordner",
     },
     kategorieStore: {
@@ -354,10 +340,15 @@ export const createRootStore = () => {
       fotografenLoading: false,
       fotografenError: null,
     },
+    
     familienStore: {
-      treffer: [],
-      selected: null,
-    },
+  treffer: [],
+  selected: null,
+}
+    
+    
+    
+    ,
   })
 
   return mstStore

@@ -6,7 +6,7 @@ import { useStore } from '../store/StoreContext'
 import SucheView from '../views/SucheView'
 import KategorieFormSmart from './KategorieFormSmart'
 import FamilienSuche from './FamilienSuche'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 interface SidebarProps {
   isOpen?: boolean
@@ -15,7 +15,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = observer(({ isOpen = false, onClose = () => {} }) => {
   const { suchStore } = useStore()
-  const { view, verwaltungTab, setVerwaltungTab, setView } = suchStore
+  const { verwaltungTab, setVerwaltungTab } = suchStore
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -48,94 +48,87 @@ const Sidebar: React.FC<SidebarProps> = observer(({ isOpen = false, onClose = ()
   const baseClasses = `fixed z-50 inset-y-0 left-0 bg-gray-900 text-white w-60 transform transition-transform duration-300 md:relative md:translate-x-0`
   const translateClass = isOpen ? 'translate-x-0' : '-translate-x-full'
 
-  // ============ Hauptinhalt für Ansicht "bilder" ============
-  const renderBilderSidebar = () => (
-    <>
-      <div className="space-y-2">
-        <button
-          className={`w-full p-2 rounded ${view === 'suche' ? 'bg-blue-700' : 'bg-gray-700'}`}
-          onClick={() => setView('suche')}
-        >
-          Suche
-        </button>
-
-        <button
-          className="w-full p-2 bg-gray-700 rounded hover:bg-blue-600"
-          onClick={() => navigate('/browser')}
-        >
-          Browser
-        </button>
-
-        <button
-          className="w-full p-2 bg-gray-700 rounded hover:bg-blue-600"
-          onClick={() => setShowKategorieForm(prev => !prev)}
-        >
-          Kategorie
-        </button>
-      </div>
-
-      {view === 'suche' && (
-        <SucheView values={sucheValues} onChange={setSucheValues} onSearch={handleSearch} />
-      )}
-
-      {showKategorieForm && (
-        <div className="mt-4">
-          <KategorieFormSmart />
-        </div>
-      )}
-    </>
-  )
-
-  // ============ Verwaltung ============
-  const renderVerwaltungSidebar = () => (
-    <div className="space-y-2">
-      {['ordner', 'bilder', 'videoeditor', 'reports'].map((tab) => (
-        <button
-          key={tab}
-          className={`w-full p-2 rounded ${verwaltungTab === tab ? 'bg-blue-700' : 'bg-gray-700'}`}
-          onClick={() => setVerwaltungTab(tab as any)}
-        >
-          {tab.charAt(0).toUpperCase() + tab.slice(1)}
-        </button>
-      ))}
-    </div>
-  )
-
-  // ============ Familie ============
-  const renderFamilienSidebar = () => (
-    <div className="p-4 space-y-4 overflow-y-auto h-full">
-      {/* Mobile Close Button */}
-      <div className="md:hidden text-right">
-        <button onClick={onClose} className="text-white text-2xl font-bold">&times;</button>
-      </div>
-      <FamilienSuche />
-    </div>
-  )
+  const isPath = (path: string) => location.pathname === path
 
   const sidebarContent = (
     <div className="p-4 space-y-4 overflow-y-auto h-full">
-      {/* Mobile Close Button */}
       <div className="md:hidden text-right">
         <button onClick={onClose} className="text-white text-2xl font-bold">&times;</button>
       </div>
 
-      {location.pathname.startsWith('/bilder') && renderBilderSidebar()}
-      {location.pathname.startsWith('/abfragen') && renderVerwaltungSidebar()}
-    </div>
-  )
+      {isPath('/bilder') && (
+        <>
+          <div className="space-y-2">
+            <button
+              className="w-full p-2 bg-gray-700 rounded hover:bg-blue-600"
+              onClick={handleSearch}
+            >
+              Suche ausführen
+            </button>
 
-if (location.pathname.startsWith('/ahnen')) {
-  return (
-    <div className={`${baseClasses} ${translateClass}`}>
-      <div className="p-4 space-y-4 overflow-y-auto h-full">
-        <div className="md:hidden text-right">
-          <button onClick={onClose} className="text-white text-2xl font-bold">&times;</button>
+            <button
+              className="w-full p-2 bg-gray-700 rounded hover:bg-blue-600"
+              onClick={() => navigate('/browser')}
+            >
+              Browser
+            </button>
+
+            <button
+              className="w-full p-2 bg-gray-700 rounded hover:bg-blue-600"
+              onClick={() => setShowKategorieForm((prev) => !prev)}
+            >
+              Kategorie
+            </button>
+          </div>
+
+          <SucheView
+            values={sucheValues}
+            onChange={setSucheValues}
+            onSearch={handleSearch}
+          />
+
+          {showKategorieForm && (
+            <div className="mt-4">
+              <KategorieFormSmart />
+            </div>
+          )}
+        </>
+      )}
+
+      {isPath('/abfragen') && (
+        <div className="space-y-2">
+          <button
+            className={`w-full p-2 rounded ${verwaltungTab === 'ordner' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setVerwaltungTab('ordner')}
+          >
+            Ordner
+          </button>
+          <button
+            className={`w-full p-2 rounded ${verwaltungTab === 'bilder' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setVerwaltungTab('bilder')}
+          >
+            Bilder
+          </button>
+          <button
+            className={`w-full p-2 rounded ${verwaltungTab === 'videoeditor' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setVerwaltungTab('videoeditor')}
+          >
+            Videoeditor
+          </button>
+          <button
+            className={`w-full p-2 rounded ${verwaltungTab === 'reports' ? 'bg-blue-700' : 'bg-gray-700'}`}
+            onClick={() => setVerwaltungTab('reports')}
+          >
+            Reports
+          </button>
         </div>
+      )}
+
+      {isPath('/ahnen') && (
         <FamilienSuche />
-      </div>
+      )}
     </div>
   )
-}
 
   return (
     <div className={`${baseClasses} ${translateClass}`}>

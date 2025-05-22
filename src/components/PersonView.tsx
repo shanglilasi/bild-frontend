@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-
+import { BASE_URL } from '../config';
 type Person = {
   id: number
   name: string
@@ -32,7 +32,7 @@ export default function PersonView({ initialPersonId }: Props) {
   const [allPersons, setAllPersons] = useState<Person[]>([])
 
   useEffect(() => {
-    fetch(`/api/person/${initialPersonId}`)
+    fetch(`${BASE_URL}/ahnen/person/${initialPersonId}`)
       .then(res => res.json())
       .then((data: Person) => {
         setPersonData(data)
@@ -43,7 +43,7 @@ export default function PersonView({ initialPersonId }: Props) {
         })
       })
 
-    fetch("/api/persons")
+    fetch(`${BASE_URL}/ahnen/person`)
       .then(res => res.json())
       .then((data: Person[]) => setAllPersons(data))
   }, [initialPersonId])
@@ -58,7 +58,7 @@ export default function PersonView({ initialPersonId }: Props) {
       mother: motherId ? { id: motherId } : null
     }
 
-    fetch(`/api/person/${initialPersonId}`, {
+    fetch(`${BASE_URL}/ahnen/person/${initialPersonId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)

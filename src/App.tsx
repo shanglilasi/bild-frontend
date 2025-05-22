@@ -31,8 +31,8 @@ function App() {
         <Route path="/browser" element={<BrowserView />} />
         <Route path="/abfragen" element={<DatenbankAbfragePage />} />
         <Route path="/kategorien" element={<KategorieManagerView />} />
-        <Route path="/person/:id" element={<PersonViewWrapper />} />
         <Route path="/ahnen" element={<FamilienView />} />
+        <Route path="/person/:id" element={<PersonViewWrapper />} />
       </Route>
     </Routes>
   )
