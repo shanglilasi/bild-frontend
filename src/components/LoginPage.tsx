@@ -4,6 +4,7 @@ import { useStore } from '../store/StoreContext'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { BASE_URL } from '../config';
+import { apiFetch } from "../util/api"
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -11,36 +12,38 @@ export default function LoginPage() {
   const { authStore } = useStore()
   const navigate = useNavigate()
 
+
   const handleLogin = async () => {
-    setErrorMsg(null)
-    if (!email || !password) {
-      setErrorMsg('Bitte gültige Anmeldedaten eingeben.')
-      return
-    }
-
-    const formData = new FormData()
-    formData.append('email', email)
-    formData.append('password', password)
-
-    try {
-      const response = await fetch(`${BASE_URL}/login/checklogin`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include', // wichtig für Cookies / Session!
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        authStore.login(data.user)
-        navigate('/bilder')
-      } else {
-        setErrorMsg(data.error || 'Login fehlgeschlagen.')
-      }
-    } catch (error) {
-      setErrorMsg('Serverfehler beim Login.')
-    }
+  setErrorMsg(null)
+  if (!email || !password) {
+    setErrorMsg('Bitte gültige Anmeldedaten eingeben.')
+    return
   }
+
+  try {
+    const response = await apiFetch(`${BASE_URL}/login/checklogin`, {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      authStore.login(data.user)
+      navigate('/bilder')
+    } else {
+      setErrorMsg(data.error || 'Login fehlgeschlagen.')
+    }
+  } catch (error) {
+    setErrorMsg('Serverfehler beim Login.')
+  }
+}
+
+
+
+
+
+
 
   return (
     <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow space-y-4 border">

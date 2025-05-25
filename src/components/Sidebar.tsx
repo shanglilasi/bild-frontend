@@ -4,8 +4,8 @@ import React, { useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import { useStore } from '../store/StoreContext'
 import SucheView from '../views/SucheView'
-import KategorieFormSmart from './KategorieFormSmart'
-import FamilienSuche from './FamilienSuche'
+import KategorieFormSmart from './subBilder/KategorieFormSmart'
+import FamilienSuche from './subFamilie/FamilienSuche'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 interface SidebarProps {

@@ -2,7 +2,7 @@
 
 import { observer } from 'mobx-react-lite'
 import { useStore } from '../store/StoreContext'
-import FolderTable from '../components/FolderTable'
+import FolderTable from '../components/subBilder/FolderTable'
 
 
 const DatenbankAbfragePage = observer(() => {

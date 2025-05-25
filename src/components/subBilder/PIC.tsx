@@ -1,11 +1,11 @@
-// src/components/PIC.tsx
-
+// src/components/subBilder/PIC.tsx
+import { apiFetch } from "../../util/api"
 import { useEffect, useRef, useState } from "react"
 import KategorieInfo from "./KategorieInfo"
-import type { BildData } from "../types/Bild"
+import type { BildData } from "../../types/Bild"
 import BildBeschreibungModal from "./BildBeschreibungModal"
-import { BASE_URL } from '../config';
-import type { Kategorie } from '../types/Kategorie'
+import { BASE_URL } from '../../config';
+import type { Kategorie } from '../../types/Kategorie'
 
 
 export default function PIC({ data }: { data: BildData }) {
@@ -41,7 +41,7 @@ export default function PIC({ data }: { data: BildData }) {
 
   const fetchKategorien = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/bilder/holeKatZuBild/${data.NR}`)
+      const res = await apiFetch(`${BASE_URL}/bilder/holeKatZuBild/${data.NR}`)
       const result = await res.json()
       setKategorien(result || [])
     } catch (err) {

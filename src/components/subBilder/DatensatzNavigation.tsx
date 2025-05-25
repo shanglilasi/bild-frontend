@@ -1,5 +1,5 @@
 
-//components/DatensatzNavigation.tsx
+//components/subBilder/DatensatzNavigation.tsx
 
 type DatensatzNavigatorProps = {
     index: number

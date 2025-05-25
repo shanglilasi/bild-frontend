@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Bot, Loader2 } from "lucide-react"
 import { BASE_URL } from '../../config'
-
+import { apiFetch } from "../../util/api"
 export default function LlmInfo({ bildNr }: { bildNr: number }) {
   const [info, setInfo] = useState<{ stichworte: { id: number, wort: string }[] }>({ stichworte: [] })
   const [fragen, setFragen] = useState<{ id: number, frage: string }[]>([])
@@ -17,7 +17,7 @@ export default function LlmInfo({ bildNr }: { bildNr: number }) {
   const loadLLM = async () => {
   setLoading(true)
   try {
-    const res = await fetch(`${BASE_URL}/llm/holeLLM/${bildNr}`)
+    const res = await apiFetch(`${BASE_URL}/llm/holeLLM/${bildNr}`)
     const data = await res.json()
     setInfo(data)
   } catch (err) {
@@ -38,7 +38,7 @@ useEffect(() => {
 
   const loadFragen = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/llm/alleFragen`)
+      const res = await apiFetch(`${BASE_URL}/llm/alleFragen`)
       const data = await res.json()
       setFragen(data)
       if (data.length > 0) setSelectedFrage(data[0].id)
@@ -57,7 +57,7 @@ useEffect(() => {
     if (!selectedFrage) return
     setSending(true)
     try {
-      const res = await fetch(`${BASE_URL}/llm/frageLLM?bild_id=${bildNr}&frage_id=${selectedFrage}`)
+      const res = await apiFetch(`${BASE_URL}/llm/frageLLM?bild_id=${bildNr}&frage_id=${selectedFrage}`)
       const data = await res.json()
       setAntwort(data?.antwort || "Keine Antwort erhalten.")
       await loadLLM()
@@ -75,7 +75,7 @@ useEffect(() => {
   const handleDelete = async (krId: number) => {
     console.log("Lösche kr.id:", krId)
     try {
-      const res = await fetch(`${BASE_URL}/llm/delKeyword/${krId}`, {
+      const res = await apiFetch(`${BASE_URL}/llm/delKeyword/${krId}`, {
         method: 'DELETE',
       })
       const result = await res.json()
@@ -165,7 +165,7 @@ useEffect(() => {
         className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
         onClick={async () => {
           try {
-            const res = await fetch(`${BASE_URL}/llm/addFrage`, {
+            const res = await apiFetch(`${BASE_URL}/llm/addFrage`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ frage: neueFrage }),

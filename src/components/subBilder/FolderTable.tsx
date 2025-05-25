@@ -1,9 +1,10 @@
-//components/FolderTable.tsx
+//components/subBilder/FolderTable.tsx
+import { apiFetch } from "../../util/api"
 import React, { useEffect, useState } from "react"
 import KategorieCombobox from "./KategorieCombobox"
-import { useStore } from "../store/StoreContext"
+import { useStore } from "../../store/StoreContext"
 import { observer } from "mobx-react-lite"
-import { BASE_URL } from '../config';
+import { BASE_URL } from '../../config';
 
 interface Folder {
   NR: number
@@ -30,7 +31,7 @@ const FolderTable: React.FC = () => {
   useEffect(() => {
     kategorieStore.loadKategorien()
 
-    fetch(`${BASE_URL}/utils/folder`)
+    apiFetch(`${BASE_URL}/utils/folder`)
       .then((res) => res.json())
       .then((data: Folder[]) => setFolders(data))
       .catch((error) => console.error("Fehler beim Laden der Ordner:", error))
@@ -38,7 +39,7 @@ const FolderTable: React.FC = () => {
 
   const handleEinlesen = async (folderNr: number) => {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${BASE_URL}/utils/read/${folderNr}?kategorie=${selectedKategorieId || "0"}`, // Fallback auf 0
         { method: "GET" }
       )
@@ -78,7 +79,7 @@ const FolderTable: React.FC = () => {
   }
 
   return (
-    <div className="p-1 bg-white">
+    <div className="p-1 bg-green">
       <div className="space-y-1">
         <h3 className="text-lg font-semibold">
           Bilder direkt einer Kategorie zuordnen:
@@ -161,8 +162,8 @@ const FolderTable: React.FC = () => {
 
         {/* Tabelle aller Ordner */}
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 rounded-md shadow-sm text-sm text-left">
-            <thead className="bg-gray-100">
+          <table className="min-w-full border border-green rounded-md shadow-sm text-sm text-left">
+            <thead className="bg-black">
               <tr>
                 <th className="px-4 py-2 border">Ordner</th>
                 <th className="px-4 py-2 border">Zuletzt eingelesen</th>
@@ -173,14 +174,11 @@ const FolderTable: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {folders.map((folder) => (
-                <tr key={folder.NR} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border text-blue-600 text-left">
-                    <a
-                      href={`bilder/bildsuche?suche=${folder.NR}&modus=pfad&von=0&anz=100`}
-                      className="hover:underline"
-                    >
+                <tr key={folder.NR} className="hover:bg-gray-500">
+                  <td className="px-4 py-2 border text-left">
+                 
                       {folder.PFAD}
-                    </a>
+                    
                   </td>
                   <td className="px-4 py-2 border">{folder.EINLESEDATUM ?? "—"}</td>
                   <td className="px-4 py-2 border">{folder.Anz}</td>

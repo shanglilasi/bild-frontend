@@ -1,4 +1,4 @@
-// src/components/PersonElement.tsx
+// src/components/subFamilie/PersonElement.tsx
 import { useNavigate } from "react-router-dom"
 
 type Props = {

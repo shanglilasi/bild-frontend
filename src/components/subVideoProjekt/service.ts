@@ -2,11 +2,11 @@
 import { BASE_URL } from "../../config";
 import { EditableMark } from "./types";
 import { FileEntry } from "./types";
-
+import { apiFetch } from "../../util/api";
 import { groupFilesByRootVideo } from "./groupFilesByRootVideo";
 
 export async function fetchRelatedFiles(nr: string): Promise<FileEntry[]> {
-  const res = await fetch(`${BASE_URL}/utils/listFilesTree/${nr}`);
+  const res = await apiFetch(`${BASE_URL}/utils/listFilesTree/${nr}`);
   const data = await res.json();
   const flatEntries = data.entries as FileEntry[];
   const grouped = groupFilesByRootVideo(flatEntries);
@@ -22,7 +22,7 @@ export async function loadMarks(videoFullPath: string): Promise<{
   try {
     const encoded = encodeURIComponent(videoFullPath.replaceAll("/", "|"));
     const url = `${BASE_URL}/utils/schnittmarkeAktiv/${encoded}`;
-    const res = await fetch(url);
+    const res = await apiFetch(url);
 
     if (!res.ok) {
       if (res.status === 404) {
@@ -71,7 +71,7 @@ export async function alt_loadMarks(videoFullPath: string): Promise<{
   try {
     const encoded = encodeURIComponent(videoFullPath.replaceAll("/", "|"));
     const url = `${BASE_URL}/utils/schnittmarkeAktiv/${encoded}`;
-    const res = await fetch(url);
+    const res = await apiFetch(url);
     if (!res.ok) throw new Error("Fehler beim Laden der aktiven Variante");
 
     const data = await res.json();
@@ -99,7 +99,7 @@ export async function alt_loadMarks(videoFullPath: string): Promise<{
 export async function saveMarks(fullPath: string, bildNr: number, marks: EditableMark[]) {
   try {
     const encoded = encodeURIComponent(fullPath.replaceAll("/", "|"));
-    const res = await fetch(`${BASE_URL}/utils/marks/${bildNr}/${encoded}`, {
+    const res = await apiFetch(`${BASE_URL}/utils/marks/${bildNr}/${encoded}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ marks }),
@@ -116,7 +116,7 @@ export async function saveMarks(fullPath: string, bildNr: number, marks: Editabl
 export async function fetchMarkVariants(videoPath: string, bildNr: number, all = false): Promise<string[]> {
   try {
     const encodedPath = encodeURIComponent(videoPath.replaceAll("/", "|"));
-    const res = await fetch(`${BASE_URL}/utils/markVariants//${bildNr}//${encodedPath}?all=${all}`);
+    const res = await apiFetch(`${BASE_URL}/utils/markVariants//${bildNr}//${encodedPath}?all=${all}`);
     if (!res.ok) throw new Error("Fehler beim Laden der Varianten");
     const data = await res.json();
     return data.variants || [];
@@ -131,7 +131,7 @@ export async function loadMarksWithVariant(videoFullPath: string, variantName: s
   try {
     const encoded = encodeURIComponent(videoFullPath.replaceAll("/", "|"));
     const variant = encodeURIComponent(variantName);
-    const res = await fetch(`${BASE_URL}/utils/marks/${encoded}?variant=${variant}`);
+    const res = await apiFetch(`${BASE_URL}/utils/marks/${encoded}?variant=${variant}`);
     if (!res.ok) throw new Error("Fehler beim Laden");
     const data = await res.json();
     return data.marks || [];

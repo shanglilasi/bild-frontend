@@ -1,6 +1,9 @@
+//subBilder/subBilder/ExifInfo.tsx
+
+import { apiFetch } from "../../util/api"
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
-import { BASE_URL } from '../config';
+import { BASE_URL } from '../../config';
 export default function ExifInfo({ bildNr }: { bildNr: number }) {
   const [exif, setExif] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -8,7 +11,7 @@ export default function ExifInfo({ bildNr }: { bildNr: number }) {
   useEffect(() => {
     const loadExif = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/exif/holeExif/${bildNr}`)
+        const res = await apiFetch(`${BASE_URL}/exif/holeExif/${bildNr}`)
         const data = await res.json()
         setExif(data)
       } catch (err) {

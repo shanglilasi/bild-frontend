@@ -1,15 +1,18 @@
-//components/BildBeschreibungModal.tsx
+//components/subBilder/BildBeschreibungModal.tsx
 
+import { apiFetch } from "../../util/api"
 
 import { useEffect, useRef, useState } from "react"
-import { useStore } from "../store/StoreContext"
+
+import { useStore } from "../../store/StoreContext"
 import KategorieCombobox from "./KategorieCombobox"
-import type { BildData } from "../types/Bild"
+
+import type { BildData } from "../../types/Bild"
 import ExifInfo from "./ExifInfo"
-import LlmInfo from "./LlmInfo"
+import LlmInfo from "../LlmInfo"
 import { BildLink } from "./BildLink"
-import VideoProjekt from "./VideoProjekt"
-import { BASE_URL } from '../config';
+import VideoProjekt from "../subVideoProjekt"
+import { BASE_URL } from '../../config';
 
 export default function BildBeschreibungModal({
   nr,
@@ -34,7 +37,7 @@ export default function BildBeschreibungModal({
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const handleKategorieHinzufuegen = async (katId: string | number) => {
     try {
-      await fetch(`${BASE_URL}/bilder/addKat/${bild?.NR}/${katId}`, {
+      await apiFetch(`${BASE_URL}/bilder/addKat/${bild?.NR}/${katId}`, {
         method: "POST",
       })
       if (bild?.NR) {
@@ -46,9 +49,12 @@ export default function BildBeschreibungModal({
     }
   };
 
+
+
+
   const handleKategorieEntfernen = async (katId: number) => {
     try {
-      await fetch(`${BASE_URL}/bilder/remKat/${bild?.NR}/${katId}`, {
+      await apiFetch(`${BASE_URL}/bilder/remKat/${bild?.NR}/${katId}`, {
         method: "DELETE",
       })
       await reloadKategorien(nr)
@@ -59,13 +65,13 @@ export default function BildBeschreibungModal({
   };
 
   const reloadKategorien = async (bildNr: number) => {
-    const res = await fetch(`${BASE_URL}/bilder/holeKatZuBild/${bildNr}`)
+    const res = await apiFetch(`${BASE_URL}/bilder/holeKatZuBild/${bildNr}`)
     const data = await res.json()
     setKategorien(data)
   }
 
   const loadBild = async (nummer: number) => {
-    const res = await fetch(`${BASE_URL}/bilder/bild/${nummer}`)
+    const res = await apiFetch(`${BASE_URL}/bilder/bild/${nummer}`)
     const data = await res.json()
     const url = `${BASE_URL}/utils/images/${data.bild.pfad}${data.bild.datei}`
     const loaded: BildData = {
@@ -89,7 +95,7 @@ export default function BildBeschreibungModal({
   
     try {
       const url = `${BASE_URL}/bilder/propKat/${bild.NR}/10`
-      const res = await fetch(url)
+      const res = await apiFetch(url)
       const data = await res.json()
       setVorgeschlageneKategorien(data)
     } catch (err) {
@@ -99,7 +105,7 @@ export default function BildBeschreibungModal({
 
   const fetchLastPicInfo = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/bilder/lastPicInfo/${nr}`)
+      const res = await apiFetch(`${BASE_URL}/bilder/lastPicInfo/${nr}`)
       const data = await res.json()
       setLastPicInfo(data.bild)
     } catch (err) {
@@ -113,7 +119,7 @@ export default function BildBeschreibungModal({
     await saveChangesIfNeeded(); // <--- NEU: Änderungen speichern!
   
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         `${BASE_URL}/bilder/chrono/${navigationMode}/${bild.NR}/${direction}`
       );
       const data = await res.json();
@@ -195,7 +201,7 @@ export default function BildBeschreibungModal({
         typ: bild.typ || "",
       };
   
-      const res = await fetch(`${BASE_URL}/bilder/bild/${cleanBild.NR}`, {
+      const res = await apiFetch(`${BASE_URL}/bilder/bild/${cleanBild.NR}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cleanBild),
@@ -223,7 +229,7 @@ export default function BildBeschreibungModal({
     if (!lastPicInfo) return
 
     try {
-      const res = await fetch(`${BASE_URL}/bilder/sameAsPic/${nr}/${lastPicInfo.NR}`, {
+      const res = await apiFetch(`${BASE_URL}/bilder/sameAsPic/${nr}/${lastPicInfo.NR}`, {
         method: "POST",
       })
       if (!res.ok) throw new Error("Fehler beim Übernehmen")

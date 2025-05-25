@@ -12,7 +12,7 @@ import {
 } from "./service";
 import { EditableMark, FileEntry, VideoProjektProps, SchnittmarkenVariante } from "./types";
 import { BASE_URL } from '../../config';
-
+import { apiFetch } from "../../util/api";
 
 const COLOR_EFFECTS = [
   { value: "null", label: "Kein Effekt" },
@@ -102,7 +102,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
     const loadVarianten = async () => {
       try {
         const encodedPath = encodeURIComponent(selectedFileFullPath.replaceAll("/", "|"));
-        const res = await fetch(`${BASE_URL}/utils/schnittmarken_proj/${bildNr}/${encodedPath}`);
+        const res = await apiFetch(`${BASE_URL}/utils/schnittmarken_proj/${bildNr}/${encodedPath}`);
         if (!res.ok) throw new Error("Serverantwort war nicht OK");
         const data = await res.json();
         setMarkenVarianten(data);
@@ -123,7 +123,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
     setIsWorking(true);
     try {
       const query = new URLSearchParams(params as Record<string, string>).toString();
-      const res = await fetch(`${BASE_URL}/utils/${endpoint}?${query}`);
+      const res = await apiFetch(`${BASE_URL}/utils/${endpoint}?${query}`);
       const data = await res.json();
       console.log(data);
       await reloadFileTree(); // <
@@ -169,7 +169,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   
     try {
       const encoded = encodeURIComponent(selectedFileFullPath.replaceAll("/", "|"));
-      const res = await fetch(`${BASE_URL}/utils/marks/${bildNr}/${encoded}`, {
+      const res = await apiFetch(`${BASE_URL}/utils/marks/${bildNr}/${encoded}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -189,7 +189,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
 
   const handleCloneVariant = async (id: number) => {
     try {
-      const res = await fetch(`${BASE_URL}/utils/schnittmarken/${id}`);
+      const res = await apiFetch(`${BASE_URL}/utils/schnittmarken/${id}`);
       if (!res.ok) throw new Error("Variante konnte nicht geladen werden");
       const data = await res.json();
   

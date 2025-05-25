@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BASE_URL } from '../../config';
-
+import { apiFetch } from "../../util/api";
 interface FileTreeActionsProps {
   fullPath: string;
   name: string;
@@ -19,7 +19,7 @@ export default function FileTreeActions({ fullPath, name, onActionDone,onRefresh
   const handleOpenFolder = async () => {
     try {
       const encodedPath = fullPath.replaceAll("/", "|");
-      const response = await fetch(
+      const response = await apiFetch(
         `${BASE_URL}/utils/openFolder/${encodeURIComponent(encodedPath)}`,
         { method: "GET" }
       );
@@ -42,7 +42,7 @@ export default function FileTreeActions({ fullPath, name, onActionDone,onRefresh
     if (confirm(`Möchtest du die Datei "${name}" wirklich löschen?`)) {
       try {
         const encodedPath = fullPath.replaceAll("/", "|");
-        const response = await fetch(`${BASE_URL}/utils/deletefile/${encodeURIComponent(encodedPath)}`, {
+        const response = await apiFetch(`${BASE_URL}/utils/deletefile/${encodeURIComponent(encodedPath)}`, {
           method: "GET",
         });
         const result = await response.json();
@@ -68,7 +68,7 @@ export default function FileTreeActions({ fullPath, name, onActionDone,onRefresh
 
     if (newName && newName !== name) {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `${BASE_URL}/utils/rename/${encodeURIComponent(encodedPath)}/${encodeURIComponent(newName)}`,
           { method: "GET" }
         );

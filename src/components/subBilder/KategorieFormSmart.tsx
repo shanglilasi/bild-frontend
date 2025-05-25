@@ -1,15 +1,16 @@
-// components/KategorieFormSmart.tsx
+//src/ components/subBilder/KategorieFormSmart.tsx
 import { useState } from 'react'
 import KategorieForm from './KategorieForm'
 import DatensatzNavigation from './DatensatzNavigation'
-import { useStore } from '../store/StoreContext'
+import { useStore } from '../../store/StoreContext'
+import { apiFetch } from '../../util/api'
+
 
 export default function KategorieFormSmart() {
   const { kategorieStore } = useStore()
   const [successMsg, setSuccessMsg] = useState('')
   const [treffer, setTreffer] = useState<any[]>([])
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
-
   const kategorien = kategorieStore.kategorien
 
   const handleSearch = (filter: {
@@ -35,7 +36,7 @@ export default function KategorieFormSmart() {
       ? `http://localhost:5001/kategorien/kategorie/${data.NR}`
       : `http://localhost:5001/kategorien/kategorie`
 
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: isUpdate ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

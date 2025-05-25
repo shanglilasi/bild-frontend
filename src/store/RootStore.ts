@@ -1,7 +1,7 @@
 import { types, flow, Instance, cast,clone } from "mobx-state-tree"
 import type { BildData } from '../types/Bild'
 import { BASE_URL } from '../config'
-
+import { apiFetch } from "../util/api"
 // ======================
 // 📦 Modelle
 // ======================
@@ -64,7 +64,7 @@ const FamilienStore = types
   .actions((self) => ({
     search: flow(function* (query: string) {
       try {
-        const res = yield fetch(`${BASE_URL}/ahnen/suche/${encodeURIComponent(query)}`)
+        const res = yield apiFetch(`${BASE_URL}/ahnen/suche/${encodeURIComponent(query)}`)
         const data = yield res.json()
         self.treffer = data
       } catch (err) {
@@ -93,7 +93,7 @@ const AuthStore = types
     },
     logout: flow(function* () {
       try {
-        yield fetch('/login/logout', {
+        yield apiFetch('/login/logout', {
           method: 'GET',
           credentials: 'include',
         })
@@ -107,7 +107,7 @@ const AuthStore = types
     checkSession: flow(function* () {
       self.isLoading = true
       try {
-        const res = yield fetch('/login/status', {
+        const res = yield apiFetch('/login/status', {
           method: 'GET',
           credentials: 'include',
         })
@@ -188,7 +188,7 @@ const SuchStore = types
     },
     search: flow(function* (values) {
       try {
-        const res = yield fetch(`${BASE_URL}/bilder/bilder`, {
+        const res = yield apiFetch(`${BASE_URL}/bilder/bilder`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -244,7 +244,7 @@ const KategorieStore = types
       self.loading = true
       self.error = null
       try {
-        const res = yield fetch(`${BASE_URL}/kategorien/kategorie`)
+        const res = yield apiFetch(`${BASE_URL}/kategorien/kategorie`)
         const data = yield res.json()
         self.kategorien = cast(data.map((item: any) => ({
           id: Number(item.id),
@@ -264,7 +264,7 @@ const KategorieStore = types
       self.kamerasLoading = true
       self.kamerasError = null
       try {
-        const res = yield fetch(`${BASE_URL}/utils/kamera`)
+        const res = yield apiFetch(`${BASE_URL}/utils/kamera`)
         const data = yield res.json()
         self.kameras = data
         self.kamerasLoading = false
@@ -277,7 +277,7 @@ const KategorieStore = types
       self.fotografenLoading = true
       self.fotografenError = null
       try {
-        const res = yield fetch(`${BASE_URL}/utils/fotografen`)
+        const res = yield apiFetch(`${BASE_URL}/utils/fotografen`)
         const data = yield res.json()
         self.fotografen = data
         self.fotografenLoading = false

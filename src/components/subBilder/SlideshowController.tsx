@@ -1,6 +1,6 @@
-// components/SlideshowControler.tsx
+// components/subBilder/SlideshowControler.tsx
 import { useEffect, useRef, useState } from "react";
-import { useStore } from "../store/StoreContext";
+import { useStore } from "../../store/StoreContext";
 import BildBeschreibungModal from "./BildBeschreibungModal";
 
 export default function Slideshow() {

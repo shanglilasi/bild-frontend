@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BASE_URL } from '../config';
-
+import { apiFetch } from "../util/api"
 const RegisterForm = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -25,7 +25,7 @@ const RegisterForm = () => {
     formData.append('password', password);
 
     try {
-      const response = await fetch(`${BASE_URL}/login/register`, {
+      const response = await apiFetch(`${BASE_URL}/login/register`, {
         method: 'POST',
         body: formData,
       });
@@ -45,7 +45,7 @@ const RegisterForm = () => {
   const handleActivation = async () => {
     setActivationResult(null);
     try {
-      const res = await fetch(`${BASE_URL}/login/activate?code=${encodeURIComponent(activationCode)}`, {
+      const res = await apiFetch(`${BASE_URL}/login/activate?code=${encodeURIComponent(activationCode)}`, {
         method: 'GET',
       });
       const data = await res.json();

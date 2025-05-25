@@ -1,11 +1,13 @@
+//src/components/subBilder/KategorieForm.tsx
+
 import { useState, useEffect } from 'react'
 import KategorieCombobox from './KategorieCombobox'
 import KategorieListe from './Kategorieliste'
-import { useStore } from '../store/StoreContext'
-import { BASE_URL } from '../config'
+import { useStore } from '../../store/StoreContext'
+import { BASE_URL } from '../../config'
 import Modal from './Modal'
-import type { Kategorie } from '../types/Kategorie'
-
+import type { Kategorie } from '../../types/Kategorie'
+import { apiFetch } from "../../util/api"
 type KategorieFilter = {
   bezeichnung?: string
   kattyp?: string
@@ -123,7 +125,7 @@ export default function KategorieForm({
 
     try {
       const promises = treffer.map(bild =>
-        fetch(`${BASE_URL}/bilder/addKat/${bild.NR}/${kat.id}`, { method: "POST" })
+        apiFetch(`${BASE_URL}/bilder/addKat/${bild.NR}/${kat.id}`, { method: "POST" })
       )
       await Promise.all(promises)
       alert("Kategorie erfolgreich allen Treffern zugewiesen.")

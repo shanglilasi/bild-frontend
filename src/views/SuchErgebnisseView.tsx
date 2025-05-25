@@ -2,7 +2,7 @@
 
 import { observer } from "mobx-react-lite"
 import { useStore } from "../store/StoreContext"
-import PIC from "../components/PIC"
+import PIC from "../components/subBilder/PIC"
 import { useEffect, useRef, useState } from "react"
 
 const SuchErgebnisseView = observer(() => {

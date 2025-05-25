@@ -4,9 +4,9 @@ import { useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { useStore } from "../store/StoreContext"
 import { format, addYears, subYears, addDays } from 'date-fns'
-import KategorieCombobox from '../components/KategorieCombobox'
+import KategorieCombobox from '../components/subBilder/KategorieCombobox'
 import { BASE_URL } from '../config';
-
+import { apiFetch } from "../util/api"
 interface Props {
   values: {
     text: string
@@ -74,7 +74,7 @@ function SucheView({ values, onChange, onSearch }: Props) {
 
     try {
       if (!forceFullSearch) {
-        const res = await fetch(`${BASE_URL}/bilder/searchCount`, {
+        const res = await apiFetch(`${BASE_URL}/bilder/searchCount`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(searchParams),

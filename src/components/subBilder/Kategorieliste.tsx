@@ -1,7 +1,7 @@
-// src/components/Kategorieliste.tsx
+// src/components/subBilder/Kategorieliste.tsx
 import React from "react"
 import KategorieInfo from "./KategorieInfo"
-import type { Kategorie } from '../types/Kategorie'
+import type { Kategorie } from '../../types/Kategorie'
 
 
 

@@ -1,4 +1,4 @@
-// components/Modal.tsx
+// src/components/subBilder/Modal.tsx
 import { ReactNode, useEffect } from "react"
 import ReactDOM from "react-dom"
 

@@ -1,4 +1,4 @@
-// components/BildLink.tsx
+// components/subBilder/BildLink.tsx
 import { useState } from "react";
 import { ClipboardCopy } from "lucide-react";
 

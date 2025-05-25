@@ -1,6 +1,6 @@
-// src/components/KategorieInfo.tsx
+// src/components/subBilder/KategorieInfo.tsx
 
-import type { Kategorie } from '../types/Kategorie'
+import type { Kategorie } from '../../types/Kategorie'
 
 
 export default function KategorieInfo({

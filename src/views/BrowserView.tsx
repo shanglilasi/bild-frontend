@@ -1,7 +1,7 @@
 // src/views/BrowserView.tsx
 import { observer } from 'mobx-react-lite'
 import { useStore } from '../store/StoreContext'
-import SlideshowController from '../components/SlideshowController'
+import SlideshowController from '../components/subBilder/SlideshowController'
 
 const BrowserView = observer(() => {
   const { suchStore } = useStore()
