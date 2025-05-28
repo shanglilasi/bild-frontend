@@ -1,10 +1,12 @@
-import { getSchemaFromVariantName } from "../../types/SchnittmarkenSchemas";
+
 import { EditableMark } from "./types";
 import { formatTime } from "./helper";
+import { SchnittmarkenSchema } from "../../types/SchnittmarkenSchemas";
+
 
 
 interface Props {
-  variantName: string;
+  schema: SchnittmarkenSchema;
   marks: EditableMark[];
   setModalOpenIdx: (val: { idx: number; field: string } | null) => void;
   updateMark: (index: number, updates: Partial<EditableMark>) => void;
@@ -12,15 +14,16 @@ interface Props {
   onJumpToTime: (time: number) => void;
 }
 
+
 export default function SchnittmarkenTabelle({
-  variantName,
+  schema, 
   marks,
   setModalOpenIdx, 
   updateMark,
   deleteMark,
   onJumpToTime,
 }: Props) {
-  const schema = getSchemaFromVariantName(variantName);
+ 
 
 
   return (

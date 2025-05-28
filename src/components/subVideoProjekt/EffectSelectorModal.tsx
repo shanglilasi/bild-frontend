@@ -1,6 +1,13 @@
 // src/components/subVideoProjekt/EffectSelectorModal.tsx
 import { COLOR_EFFECTS, BLEND_MODES } from "./constants"
 
+
+interface Props {
+  onSelect: (value: string) => void;
+  onClose: () => void;
+  field: string;
+}
+
 export default function EffektSelectorModal({ onSelect, onClose, field }: Props) {
   const list = field === "methode" ? BLEND_MODES : COLOR_EFFECTS;
 

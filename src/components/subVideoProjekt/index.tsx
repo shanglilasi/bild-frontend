@@ -10,6 +10,7 @@ import {
   //saveMarks,
   
 } from "./service";
+import { SCHNITTMARKEN_SCHEMAS } from "../../types/SchnittmarkenSchemas";
 import { EditableMark, FileEntry, VideoProjektProps, SchnittmarkenVariante } from "./types";
 import { BASE_URL } from '../../config';
 import { apiFetch } from "../../util/api";
@@ -23,6 +24,8 @@ import ModalRouter from "./ModalRouter";
 
 
 export default function VideoProjekt({ bildNr }: VideoProjektProps) {
+
+  const [selectedSchemaPostfix, setSelectedSchemaPostfix] = useState("_sub"); 
   const [relatedFiles, setRelatedFiles] = useState<FileEntry[]>([]);
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
   const [selectedFileFullPath, setSelectedFileFullPath] = useState<string | null>(null);
@@ -319,13 +322,29 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   />
                   <button onClick={handleSaveMarks} className="bg-green-600 text-white px-2 py-1 rounded">💾</button>
                   <div className="mt-3 text-sm text-gray-700">
-                <p>🧠 _sub _col _combi _cl  sind Endungen die zusätzliche Felder bereitstellen</p>
+                <div className="mt-3 text-sm text-gray-700">
+  <label className="font-semibold block mb-1">🎛 Typ</label>
+  <div className="flex flex-wrap gap-4">
+    {SCHNITTMARKEN_SCHEMAS.map((schema) => (
+      <label key={schema.postfix} className="flex items-center gap-1 text-sm">
+        <input
+          type="radio"
+          name="schnittmarken-schema"
+          value={schema.postfix}
+          checked={selectedSchemaPostfix === schema.postfix}
+          onChange={() => setSelectedSchemaPostfix(schema.postfix)}
+        />
+        {schema.postfix}
+      </label>
+    ))}
+  </div>
+</div>
               </div>
            
                 </div>
 
-               <SchnittmarkenTabelle
-  variantName={variantName}
+<SchnittmarkenTabelle
+  schema={SCHNITTMARKEN_SCHEMAS.find(s => s.postfix === selectedSchemaPostfix)!}
   marks={marks}
   updateMark={updateMark}
   deleteMark={deleteMark}
@@ -350,7 +369,7 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   openModal={modalOpenIdx}
   setOpenModal={setModalOpenIdx}
   updateMark={updateMark}
-  variantName={variantName}
+  schema={SCHNITTMARKEN_SCHEMAS.find(s => s.postfix === selectedSchemaPostfix)!}
 />
 )}
 

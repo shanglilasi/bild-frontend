@@ -2,26 +2,30 @@
 import EffektSelectorModal from "./EffectSelectorModal";
 import FileSelectorModal from "./FileSelectorModal";
 import { EditableMark } from "./types";
-import { getSchemaFromVariantName } from "../../types/SchnittmarkenSchemas";
+
+
+import { SchnittmarkenSchema } from "../../types/SchnittmarkenSchemas";
+
 
 interface Props {
   openModal: { idx: number; field: string } | null;
   setOpenModal: (m: { idx: number; field: string } | null) => void;
   updateMark: (idx: number, updates: Partial<EditableMark>) => void;
-  variantName: string;
+  schema: SchnittmarkenSchema;
 }
 
 export default function ModalRouter({
   openModal,
   setOpenModal,
   updateMark,
-  variantName
+  schema,
 }: Props) {
   if (!openModal) return null;
 
   const { idx, field } = openModal;
-  const schema = getSchemaFromVariantName(variantName);
+
   const feldDef = schema.fields.find(f => f.field === field);
+
 
   const handleSelect = (value: string) => {
     updateMark(idx, { [field]: value });

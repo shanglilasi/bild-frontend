@@ -65,15 +65,20 @@ export const SCHNITTMARKEN_SCHEMAS: SchnittmarkenSchema[] = [
   ]
 },
 
+{
+  postfix: "gaga",
+  fields: [
+    { field: "time", label: "Position", type: "time" },
+    { field: "file", label: "Video", type: "file", modalType: "file" }, // 👈 HIER
+    { field: "methode", label: "🖌Methode", type: "effect", modalType: "effect" }, // 👈 optional
+    { field: "dauer", label: "⏱Dauer", type: "text" }
+  ]
+},
+
+
+
 
   // weitere Skripttypen hier ergänzen… _sub _col _combi _cl
 ]
 
 
-export function getSchemaFromVariantName(name: string): SchnittmarkenSchema {
-  const match = SCHNITTMARKEN_SCHEMAS.find((schema) =>
-    name.endsWith(schema.postfix)
-  );
-
-  return match || SCHNITTMARKEN_SCHEMAS.find(s => s.postfix === "_sub")!; // fallback: "_sub"
-}
