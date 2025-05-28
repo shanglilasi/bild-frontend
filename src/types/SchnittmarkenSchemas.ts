@@ -5,6 +5,8 @@ export interface SchnittmarkenFeldDefinition {
   type: "text" | "select" | "color" | "time" | "effect"|"file";
   options?: { value: string; label: string }[];
   editable?: boolean;
+
+    modalType?: "effect" | "file" | "custom";
 }
 
 export interface SchnittmarkenSchema {
@@ -41,17 +43,37 @@ export const SCHNITTMARKEN_SCHEMAS: SchnittmarkenSchema[] = [
       { field: "comment", label: "🎛 Farbeffekt", type: "effect" }
     ]
   },
-
-{
-    postfix: "_combi",
+  {
+    postfix: "_*",
     fields: [
-      { field: "time", label: "Position", type: "time" },
-      { field: "file", label: "Video", type: "file" },
-      { field: "methode", label: "🖌Methode", type: "text" },
-      { field: "dauer", label: "⏱Dauer", type: "time" }
+      { field: "time", label: "⏱ Zeit", type: "time" },
+      { field: "comment", label: "🎛 Farbeffekt", type: "effect" },
+      { field: "file", label: "Video", type: "file", modalType: "file" }, // 👈 HIER
+      { field: "methode", label: "🖌Methode", type: "effect", modalType: "effect" }, // 👈 optional
+      { field: "dauer", label: "⏱Dauer", type: "text" }
+
     ]
   },
 
+{
+  postfix: "_combi",
+  fields: [
+    { field: "time", label: "Position", type: "time" },
+    { field: "file", label: "Video", type: "file", modalType: "file" }, // 👈 HIER
+    { field: "methode", label: "🖌Methode", type: "effect", modalType: "effect" }, // 👈 optional
+    { field: "dauer", label: "⏱Dauer", type: "text" }
+  ]
+},
 
-  // weitere Skripttypen hier ergänzen…
+
+  // weitere Skripttypen hier ergänzen… _sub _col _combi _cl
 ]
+
+
+export function getSchemaFromVariantName(name: string): SchnittmarkenSchema {
+  const match = SCHNITTMARKEN_SCHEMAS.find((schema) =>
+    name.endsWith(schema.postfix)
+  );
+
+  return match || SCHNITTMARKEN_SCHEMAS.find(s => s.postfix === "_sub")!; // fallback: "_sub"
+}

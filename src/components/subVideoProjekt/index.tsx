@@ -1,4 +1,4 @@
-// components/VideoProjekt/index.tsx
+// src/components/VideoProjekt/index.tsx
 
 import { useEffect, useRef, useState } from "react";
 import FileTree from "./FileTree";
@@ -14,24 +14,10 @@ import { EditableMark, FileEntry, VideoProjektProps, SchnittmarkenVariante } fro
 import { BASE_URL } from '../../config';
 import { apiFetch } from "../../util/api";
 
-const COLOR_EFFECTS = [
-  { value: "null", label: "Kein Effekt" },
-  { value: "hue=s=0", label: "Sättigung = 0 (Schwarzweiß)" },
-  { value: "eq=contrast=1.5", label: "Erhöhter Kontrast" },
-  { value: "eq=brightness=0.1", label: "Helligkeit leicht erhöht" },
-  { value: "eq=brightness=-0.1", label: "Helligkeit leicht gesenkt" },
-  { value: "format=yuv420p,colorbalance=bs=0.3", label: "Blau verstärkt" },
-  { value: "format=yuv420p,colorbalance=rs=0.3", label: "Rot verstärkt" },
-  { value: "format=yuv420p,colorbalance=gs=0.3", label: "Grün verstärkt" },
-  { value: "curves=preset=strong_contrast", label: "Starker Kontrast (Kurven)" },
-  { value: "curves=preset=color_negative", label: "Farbnegativ" },
-  { value: "hue=h=90", label: "Farbton verschoben (90°)" },
-  { value: "hue=s=2", label: "Sättigung verdoppelt" },
-  { value: "hue=s=0.5", label: "Sättigung halbiert" },
-  { value: "format=yuv420p,colorchannelmixer=.3:.4:.3:0:.3:.4:.3:0:.3:.4:.3", label: "Mischung RGB-Kanäle" },
-  { value: "format=yuv420p,lutyuv='u=128:v=128'", label: "UV-Kanäle neutralisiert" },
-  { value: "eq=saturation=2.0", label: "Sättigung x2" }
-];
+import SchnittmarkenTabelle from "./SchnittmarkenTabelle";
+//import EffektSelectorModal from "./EffectSelectorModal";
+
+import ModalRouter from "./ModalRouter";
 
 
 
@@ -49,8 +35,8 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   const [selectedMarkenId, setSelectedMarkenId] = useState<number | null>(null);
   const [variantName, setVariantName] = useState("");
   const [copied, setCopied] = useState(false);
-  const [modalOpenIdx, setModalOpenIdx] = useState<number | null>(null);
 
+  const [modalOpenIdx, setModalOpenIdx] = useState<{ idx: number; field: string } | null>(null);
   useEffect(() => {
     fetchRelatedFiles(String(bildNr)).then(setRelatedFiles);
   }, [bildNr]);
@@ -333,67 +319,22 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
   />
                   <button onClick={handleSaveMarks} className="bg-green-600 text-white px-2 py-1 rounded">💾</button>
                   <div className="mt-3 text-sm text-gray-700">
-                <p>🧠 Für die Bereinigung des Videos markiere alle erwünschten Zeiten mit einem Leerzeichen als Kommentar.</p>
+                <p>🧠 _sub _col _combi _cl  sind Endungen die zusätzliche Felder bereitstellen</p>
               </div>
            
                 </div>
 
-                <table className="w-full text-sm table-auto border">
-                  <thead>
-                    <tr className="bg-gray-200">
-                      <th className="p-1">⏱ Zeit</th>
-                      <th className="p-1">💬 Kommentar</th>
-                    
-                      <th className="p-1">🔠 Größe</th>
-                      <th className="p-1">🎨 Farbe</th>
-                      <th className="p-1">🖌 Hintergrund</th>
-                      <th className="p-1">🗑</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {marks.map((mark, idx) => (
-                      <tr key={idx} className="hover:bg-gray-100">
-                        <td className="p-1 cursor-pointer text-blue-700" onClick={() => videoRef.current && (videoRef.current.currentTime = mark.time)}>
-                          {formatTime(mark.time)}
-                        </td>
-                     
-                        <td className="p-1 flex items-center gap-1">
-                          <input
-                            type="text"
-                            value={mark.comment}
-                            onChange={(e) => updateMark(idx, { comment: e.target.value })}
-                            className="border px-1 w-full"
-                          />
-                          <button
-                            onClick={() => setModalOpenIdx(idx)}
-                            title="Effekt einfügen"
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            🎛
-                          </button>
-                        </td>
+               <SchnittmarkenTabelle
+  variantName={variantName}
+  marks={marks}
+  updateMark={updateMark}
+  deleteMark={deleteMark}
+  setModalOpenIdx={setModalOpenIdx}
+  onJumpToTime={(time) => {
+    if (videoRef.current) videoRef.current.currentTime = time;
+  }}
+/>
 
-
-                        <td className="p-1">
-                          <select value={mark.size || "medium"} onChange={e => updateMark(idx, { size: e.target.value })} className="border px-1 w-full">
-                            <option value="small">Klein</option>
-                            <option value="medium">Mittel</option>
-                            <option value="large">Groß</option>
-                          </select>
-                        </td>
-                        <td className="p-1">
-                          <input type="color" value={mark.color || "#000000"} onChange={e => updateMark(idx, { color: e.target.value })} />
-                        </td>
-                        <td className="p-1">
-                          <input type="color" value={mark.background || "#ffffff"} onChange={e => updateMark(idx, { background: e.target.value })} />
-                        </td>
-                        <td className="p-1 text-center">
-                          <button onClick={() => deleteMark(idx)} className="text-red-500">✖</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </div>
           ) : (
@@ -403,30 +344,14 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
           <div className="text-gray-400">Keine Datei ausgewählt</div>
         )}
 
+
 {modalOpenIdx !== null && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-4 rounded shadow max-w-lg w-full">
-      <h3 className="text-lg font-bold mb-2">🎨 Effekt auswählen</h3>
-      <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto text-sm">
-        {COLOR_EFFECTS.map((eff, i) => (
-          <div
-            key={i}
-            onClick={() => {
-              updateMark(modalOpenIdx, { comment: eff.value });
-              setModalOpenIdx(null);
-            }}
-            className="p-2 border rounded hover:bg-blue-100 cursor-pointer"
-          >
-            <div className="font-mono text-xs mb-1">{eff.value}</div>
-            <div>{eff.label}</div>
-          </div>
-        ))}
-      </div>
-      <div className="text-right mt-4">
-        <button onClick={() => setModalOpenIdx(null)} className="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Abbrechen</button>
-      </div>
-    </div>
-  </div>
+<ModalRouter
+  openModal={modalOpenIdx}
+  setOpenModal={setModalOpenIdx}
+  updateMark={updateMark}
+  variantName={variantName}
+/>
 )}
 
 
