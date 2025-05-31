@@ -2,8 +2,6 @@
 import EffektSelectorModal from "./EffectSelectorModal";
 import FileSelectorModal from "./FileSelectorModal";
 import { EditableMark } from "./types";
-
-
 import { SchnittmarkenSchema } from "../../types/SchnittmarkenSchemas";
 
 
@@ -23,31 +21,31 @@ export default function ModalRouter({
   if (!openModal) return null;
 
   const { idx, field } = openModal;
-
-  const feldDef = schema.fields.find(f => f.field === field);
-
+  const feldDef = schema.fields.find((f) => f.field === field);
 
   const handleSelect = (value: string) => {
     updateMark(idx, { [field]: value });
     setOpenModal(null);
   };
 
-  // DEBUG-Hilfe: zeigt modalType in der Konsole
-  console.log("🧩 modalType für", field, "ist", feldDef?.modalType);
+  if (!feldDef) return null;
 
-  switch (feldDef?.modalType) {
+  switch (feldDef.modalType) {
     case "file":
-      return <FileSelectorModal onSelect={handleSelect} onClose={() => setOpenModal(null)} />;
-    
+      return (
+        <FileSelectorModal
+          onSelect={handleSelect}
+          onClose={() => setOpenModal(null)}
+        />
+      );
     case "effect":
-  return (
-    <EffektSelectorModal
-      field={field}
-      onSelect={handleSelect}
-      onClose={() => setOpenModal(null)}
-    />
-  );
-
+      return (
+        <EffektSelectorModal
+          field={field}
+          onSelect={handleSelect}
+          onClose={() => setOpenModal(null)}
+        />
+      );
     default:
       return null;
   }

@@ -97,19 +97,58 @@ export default function FileTreeActions({ fullPath, name, onActionDone,onRefresh
       ⚙️
       {hovered && (
         <div className="absolute top-full right-0 bg-white border rounded shadow-md p-1 z-50 space-y-1">
-        
             <button
                 className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1"
-                onClick={handleOpenFolder}
-            >
-              📂Öffnen
-            </button>
-            <button className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1" onClick={handleRename}>
-            🔄Umbenennen
-          </button>
-          <button className="block w-full text-left text-sm hover:bg-red-100 text-red-700 px-2 py-1" onClick={handleDelete}>
-          🗑️Löschen
-          </button>
+                onClick={() => {
+        navigator.clipboard.writeText(fullPath );
+        showMessage("in_Zwischenablage");
+      }}>📄 Pfad kopieren</button>
+            <button
+                className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1"
+                onClick={handleOpenFolder}> 📂Öffnen</button>
+
+<button
+  className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1"
+  onClick={async () => {
+    try {
+      const response = await apiFetch(
+        `${BASE_URL}/utils/history?pfad=${encodeURIComponent(fullPath)}`
+      );
+      const result = await response.json();
+      if (Array.isArray(result)) {
+        const text = result.map((item, index) =>
+          `#${index + 1}: ${JSON.stringify(item, null, 2)}`
+        ).join("\n\n");
+        alert("🕓 Historie:\n\n" + text);
+      } else {
+        alert("⚠️ Keine Historie gefunden oder Fehler beim Abruf.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Fehler beim Abrufen der Historie.");
+    }
+  }}
+>
+  🕓 Historie
+</button>
+
+
+
+
+
+
+            <button className="block w-full text-left text-sm hover:bg-gray-100 px-2 py-1" 
+                onClick={handleRename}> 🔄Umbenennen</button>
+          <button className="block w-full text-left text-sm hover:bg-red-100 text-red-700 px-2 py-1" 
+                onClick={handleDelete}>
+              🗑️Löschen</button>
+
+
+
+
+
+
+
         </div>
       )}
 

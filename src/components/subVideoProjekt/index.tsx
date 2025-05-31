@@ -104,28 +104,48 @@ export default function VideoProjekt({ bildNr }: VideoProjektProps) {
     loadVarianten();
   }, [selectedFileFullPath, selectedFileType]);
 
+const handleVideoAction = async (
+  endpoint: string,
+  params: Record<string, string | number | boolean>
+) => {
+  setIsWorking(true);
+  try {
+    const query = new URLSearchParams(params as Record<string, string>).toString();
+    const res = await apiFetch(`${BASE_URL}/utils/${endpoint}?${query}`);
+    const data = await res.json();
 
-  const handleVideoAction = async (
-    endpoint: string,
-    params: Record<string, string | number | boolean>
-  ) => {
-    setIsWorking(true);
-    try {
-      const query = new URLSearchParams(params as Record<string, string>).toString();
-      const res = await apiFetch(`${BASE_URL}/utils/${endpoint}?${query}`);
-      const data = await res.json();
-      console.log(data);
-      await reloadFileTree(); // <
-      alert(`✅ Aktion '${endpoint}' erfolgreich ausgeführt.`);
-    } catch (err) {
-      console.error(err);
-      alert(`❌ Fehler bei Aktion '${endpoint}'`);
-    } finally {
-      setIsWorking(false);
+    console.log("🧩 API-Antwort:", data);
+
+    await reloadFileTree(); // z. B. zum Aktualisieren der Dateiansicht
+
+    // Prüfe, ob das neue strukturierte Format verwendet wurde
+    if (data && typeof data === "object" && "status" in data) {
+      if (data.status === "success") {
+        alert(
+          `✅ Aktion: ${data.aktion || endpoint}\n` +
+          `${data.message || "Erfolgreich ausgeführt."}\n\n` +
+          `🎞️ Eingangsdatei:\n${data.eingangs_video || "?"}\n\n` +
+          `📁 Ergebnisdateien:\n${(data.ausgabe_videos || []).join("\n")}`
+        );
+      } else {
+        alert(`⚠️ Fehler: ${data.message || "Unbekannter Fehler bei Aktion."}`);
+      }
+    } else {
+      // Alte API ohne standardisiertes Antwortformat
+      alert(
+        `✅ Aktion '${endpoint}' erfolgreich ausgeführt.\n\n` +
+        `ℹ️ Hinweis: Diese Aktion liefert noch keine strukturierte Antwort – Doku-Funktion wahrscheinlich noch **nicht implementiert**.`
+      );
     }
-  };
+  } catch (err) {
+    console.error("❌ Fehler beim API-Aufruf:", err);
+    alert(`❌ Fehler bei Aktion '${endpoint}'`);
+  } finally {
+    setIsWorking(false);
+  }
+};
 
-  const reloadFileTree = async () => {
+const reloadFileTree = async () => {
     const files = await fetchRelatedFiles(String(bildNr));
     setRelatedFiles(files);
   };

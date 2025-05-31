@@ -1,11 +1,10 @@
 // src/components/subVideoProjekt/EffectSelectorModal.tsx
-import { COLOR_EFFECTS, BLEND_MODES } from "./constants"
-
+import { COLOR_EFFECTS, BLEND_MODES } from "./constants";
 
 interface Props {
+  field: string;
   onSelect: (value: string) => void;
   onClose: () => void;
-  field: string;
 }
 
 export default function EffektSelectorModal({ onSelect, onClose, field }: Props) {
@@ -15,7 +14,7 @@ export default function EffektSelectorModal({ onSelect, onClose, field }: Props)
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-4 rounded shadow max-w-lg w-full">
         <h3 className="text-lg font-bold mb-2">
-          {field === "methode" ? "🌀 Übergangsmethode wählen" : "🎨 Effekt auswählen"}
+          {field === "methode" ? "🌀 Übergangsmethode wählen" : "🎨 Farbeffekt auswählen"}
         </h3>
 
         <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto text-sm">

@@ -40,14 +40,14 @@ export const SCHNITTMARKEN_SCHEMAS: SchnittmarkenSchema[] = [
     postfix: "_col",
     fields: [
       { field: "time", label: "⏱ Zeit", type: "time" },
-      { field: "comment", label: "🎛 Farbeffekt", type: "effect" }
+      { field: "comment", label: "🎛 Farbeffekt", type: "effect", modalType: "effect" }
     ]
   },
   {
     postfix: "_*",
     fields: [
       { field: "time", label: "⏱ Zeit", type: "time" },
-      { field: "comment", label: "🎛 Farbeffekt", type: "effect" },
+      { field: "comment", label: "🎛 Farbeffekt", type: "effect", modalType: "effect" }, //Hier bekomme ich nicht mehr meine Effektpalette!?!
       { field: "file", label: "Video", type: "file", modalType: "file" }, // 👈 HIER
       { field: "methode", label: "🖌Methode", type: "effect", modalType: "effect" }, // 👈 optional
       { field: "dauer", label: "⏱Dauer", type: "text" }
@@ -65,15 +65,6 @@ export const SCHNITTMARKEN_SCHEMAS: SchnittmarkenSchema[] = [
   ]
 },
 
-{
-  postfix: "gaga",
-  fields: [
-    { field: "time", label: "Position", type: "time" },
-    { field: "file", label: "Video", type: "file", modalType: "file" }, // 👈 HIER
-    { field: "methode", label: "🖌Methode", type: "effect", modalType: "effect" }, // 👈 optional
-    { field: "dauer", label: "⏱Dauer", type: "text" }
-  ]
-},
 
 
 

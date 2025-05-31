@@ -77,14 +77,14 @@ export default function FileTree({ entry, onSelect, selectedPath,onRefresh }: Fi
   
           <span>{getShortName(entry.name, entry.fullPath, entry.sizeMB)}</span>
   
-          {!hasChildren && (
+        
             <FileTreeActions
               fullPath={entry.fullPath}
               name={entry.name}
               onActionDone={() => {}}
               onRefresh={onRefresh}
             />
-          )}
+     
         </div>
   
         {/* Tooltip: erscheint nur bei Hover dieser einen Zeile */}
@@ -95,9 +95,10 @@ export default function FileTree({ entry, onSelect, selectedPath,onRefresh }: Fi
             {entry.specs && (
               <>
                 {`\nResolution: ${entry.specs.width}x${entry.specs.height}`}
-                {`\nFPS: ${entry.specs.fps}`}
-                {`\nFrames: ${entry.specs.frames}`}
-                {`\nDuration: ${entry.specs.duration}`}
+                {`\nFPS: ${entry.specs.fps} VBR:${entry.specs.vfr}`}
+                {`\nFrames: ${entry.specs.frames} `}
+                {`\nDuration: ${entry.specs.duration} `}
+               
               </>
             )}
           </div>

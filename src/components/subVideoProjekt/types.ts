@@ -23,6 +23,7 @@ export interface Mark {
       fps?: number;
       frames?: string;
       duration?: string;
+      vfr?:boolean;
     };
     children?: FileEntry[];
     isExpanded?: boolean;
