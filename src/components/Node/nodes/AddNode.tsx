@@ -1,7 +1,7 @@
 // src/components/nodes/AddNode.tsx
-import { Handle, Position } from 'reactflow';
+import { Handle, Position,NodeProps } from 'reactflow';
 
-export default function AddNode({selected}) {
+export default function AddNode({ selected }: NodeProps) {
   return (
     
       <div
