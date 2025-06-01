@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { detectCycle, propagateSignalsRecursively } from './signalPropagation';
+
 import ReactFlow, {
   addEdge,
   Background,
@@ -9,6 +11,8 @@ import ReactFlow, {
   Node,
   Edge,
   Connection,
+  applyNodeChanges,
+  applyEdgeChanges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -23,8 +27,8 @@ const nodeTypes = {
 };
 
 export default function NodeEditor() {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes] = useNodesState([]);
+  const [edges, setEdges] = useEdgesState([]);
   const [showModal, setShowModal] = useState(false);
   const [pendingType, setPendingType] = useState<string | null>(null);
   const [isRunMode, setIsRunMode] = useState(false);
@@ -34,7 +38,71 @@ export default function NodeEditor() {
   const reactFlowInstance = useReactFlow();
   const { getNodes, getEdges, deleteElements } = useReactFlow();
 
-  // 👇 Default-Namen je Node-Typ
+  const updateNodes = (changedNodes: Node[]) => {
+    if (detectCycle(changedNodes, edges)) {
+      alert('⚠️ Zyklus entdeckt!');
+      return;
+    }
+    const updated = propagateSignalsRecursively(changedNodes, edges);
+    setNodes(updated);
+  };
+
+  const handleNodeChange = useCallback((changes) => {
+    setNodes((nds) => {
+      const changed = applyNodeChanges(changes, nds);
+      updateNodes(changed);
+      return changed;
+    });
+  }, [edges]);
+
+  const handleEdgeChange = useCallback((changes) => {
+    setEdges((eds) => {
+      const updated = applyEdgeChanges(changes, eds);
+      updateNodes(nodes);
+      return updated;
+    });
+  }, [nodes]);
+
+  const handleConnect = useCallback((connection: Connection) => {
+    if (isRunMode) return;
+    if (
+      connection.sourceHandle?.startsWith('out') &&
+      connection.targetHandle?.startsWith('in')
+    ) {
+      setEdges((eds) => {
+        const newEdges = addEdge({ ...connection, deletable: true }, eds);
+        updateNodes(nodes);
+        return newEdges;
+      });
+    } else {
+      alert('❌ Nur Ausgang → Eingang erlaubt');
+    }
+  }, [isRunMode, nodes]);
+
+  const toggleMode = () => {
+    const mode = !isRunMode ? 'run' : 'design';
+    const isDesign = mode === 'design';
+    setIsRunMode(!isRunMode);
+
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        data: { ...n.data, mode },
+        draggable: isDesign,
+        deletable: isDesign,
+        selectable: true,
+      }))
+    );
+
+    setEdges((eds) =>
+      eds.map((e) => ({
+        ...e,
+        deletable: isDesign,
+        selectable: isDesign,
+      }))
+    );
+  };
+
   const getDefaultName = (type: string) => {
     switch (type) {
       case 'slide':
@@ -66,7 +134,7 @@ export default function NodeEditor() {
         data: {
           type: pendingType,
           mode: 'design',
-          name: getDefaultName(pendingType), // ✅ Name direkt setzen
+          name: getDefaultName(pendingType),
         },
         draggable: true,
         deletable: true,
@@ -78,45 +146,6 @@ export default function NodeEditor() {
     },
     [pendingType, nodes, isRunMode, reactFlowInstance]
   );
-
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      if (isRunMode) return;
-      if (
-        connection.sourceHandle?.startsWith('out') &&
-        connection.targetHandle?.startsWith('in')
-      ) {
-        setEdges((eds) => addEdge({ ...connection, deletable: true }, eds));
-      } else {
-        alert('❌ Nur Ausgang → Eingang erlaubt');
-      }
-    },
-    [isRunMode]
-  );
-
-  const toggleMode = () => {
-    const mode = !isRunMode ? 'run' : 'design';
-    const isDesign = mode === 'design';
-    setIsRunMode(!isRunMode);
-
-    setNodes((nds) =>
-      nds.map((n) => ({
-        ...n,
-        data: { ...n.data, mode },
-        draggable: isDesign,
-        deletable: isDesign,
-        selectable: true,
-      }))
-    );
-
-    setEdges((eds) =>
-      eds.map((e) => ({
-        ...e,
-        deletable: isDesign,
-        selectable: isDesign,
-      }))
-    );
-  };
 
   const exportGraph = () => {
     const blob = new Blob([JSON.stringify({ nodes, edges }, null, 2)], { type: 'application/json' });
@@ -143,7 +172,7 @@ export default function NodeEditor() {
           data: {
             ...n.data,
             mode,
-            name: n.data.name || getDefaultName(n.type), // ✅ Fallback für Namen
+            name: n.data.name || getDefaultName(n.type),
           },
           draggable: isDesign,
           deletable: isDesign,
@@ -219,9 +248,9 @@ export default function NodeEditor() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={!isRunMode ? onNodesChange : undefined}
-        onEdgesChange={!isRunMode ? onEdgesChange : undefined}
-        onConnect={onConnect}
+        onNodesChange={!isRunMode ? handleNodeChange : undefined}
+        onEdgesChange={!isRunMode ? handleEdgeChange : undefined}
+        onConnect={handleConnect}
         onNodesDelete={isRunMode ? () => false : undefined}
         onEdgesDelete={isRunMode ? () => false : undefined}
         nodeTypes={nodeTypes}
