@@ -1,6 +1,6 @@
 // src/App.tsx
 
-// src/App.tsx
+
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import BildVerwaltungPage from './pages/BildVerwaltungPage'
@@ -13,12 +13,15 @@ import FamilienView from './views/FamilienView'
 import PersonViewWrapper from './views/PersonViewWrapper'
 import BrowserView from './views/BrowserView'
 
+
+import NodeEditorWrapper from './components/Node/NodeEditorWrapper'
+
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterForm />} />
-
+<Route path="/nodes" element={<NodeEditorWrapper />} />
       <Route
         element={
           <ProtectedRoute>
@@ -34,6 +37,7 @@ function App() {
         <Route path="/ahnen" element={<FamilienView />}>
         <Route path="/ahnen/person/:id" element={<PersonViewWrapper />} />
 </Route>
+ 
       </Route>
     </Routes>
   )
