@@ -8,17 +8,21 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   useReactFlow,
-  Node,
-  Edge,
   Connection,
   applyNodeChanges,
   applyEdgeChanges,
+  NodeChange,
+  EdgeChange,
 } from 'reactflow';
+
+import type { Node } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 import AddNode from './nodes/AddNode';
 import IfNode from './nodes/IfNode';
 import InputSliderNode from './nodes/InputSlider';
+import NodeSettingsModal from './NodeSettingsModal';
+
 
 const nodeTypes = {
   add: AddNode,
@@ -29,9 +33,10 @@ const nodeTypes = {
 export default function NodeEditor() {
   const [nodes, setNodes] = useNodesState([]);
   const [edges, setEdges] = useEdgesState([]);
-  const [showModal, setShowModal] = useState(false);
+  
   const [pendingType, setPendingType] = useState<string | null>(null);
   const [isRunMode, setIsRunMode] = useState(false);
+  const [activeNodeForModal, setActiveNodeForModal] = useState<Node | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -47,7 +52,7 @@ export default function NodeEditor() {
     setNodes(updated);
   };
 
-  const handleNodeChange = useCallback((changes) => {
+  const handleNodeChange = useCallback((changes: NodeChange[]) => {
     setNodes((nds) => {
       const changed = applyNodeChanges(changes, nds);
       updateNodes(changed);
@@ -55,7 +60,7 @@ export default function NodeEditor() {
     });
   }, [edges]);
 
-  const handleEdgeChange = useCallback((changes) => {
+  const handleEdgeChange = useCallback((changes: EdgeChange[]) => {
     setEdges((eds) => {
       const updated = applyEdgeChanges(changes, eds);
       updateNodes(nodes);
@@ -214,7 +219,8 @@ export default function NodeEditor() {
       className={isRunMode ? 'bg-green-100' : 'bg-gray-100'}
     >
       <div className="absolute left-4 top-4 z-50 bg-white p-2 rounded shadow flex gap-2">
-        <button onClick={() => !isRunMode && setShowModal(true)}>➕ Neue Node</button>
+     
+        <button onClick={() => !isRunMode && setPendingType('add')}>➕ Neue Node</button>
         <button onClick={exportGraph}>⬇️ Export</button>
         <button onClick={() => inputRef.current?.click()}>⬆️ Import</button>
         <button onClick={toggleMode}>
@@ -229,22 +235,6 @@ export default function NodeEditor() {
         />
       </div>
 
-      {showModal && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="mb-2 font-bold">Node-Typ wählen</h3>
-            <div className="flex gap-2">
-              <button onClick={() => { setPendingType('add'); setShowModal(false); }}>AddNode</button>
-              <button onClick={() => { setPendingType('if'); setShowModal(false); }}>IfNode</button>
-              <button onClick={() => { setPendingType('slide'); setShowModal(false); }}>InputSlider</button>
-            </div>
-            <div className="mt-4 text-right">
-              <button onClick={() => setShowModal(false)}>Abbrechen</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -255,10 +245,30 @@ export default function NodeEditor() {
         onEdgesDelete={isRunMode ? () => false : undefined}
         nodeTypes={nodeTypes}
         fitView
+        onNodeDoubleClick={(event, node) => {
+          event.stopPropagation();
+          setActiveNodeForModal(node);
+        }}
       >
         <Controls />
         <Background />
       </ReactFlow>
+
+      {activeNodeForModal && (
+  <NodeSettingsModal
+    node={activeNodeForModal}
+    onClose={() => setActiveNodeForModal(null)}
+    onUpdate={(updatedData) => {
+      setNodes((nodes) =>
+        nodes.map((n) =>
+          n.id === activeNodeForModal.id
+            ? { ...n, data: { ...n.data, ...updatedData } }
+            : n
+        )
+      );
+    }}
+  />
+)}
     </div>
   );
 }
