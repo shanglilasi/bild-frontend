@@ -1,13 +1,10 @@
-import { Handle, Position, NodeProps } from 'reactflow';
+// src/components/Node/nodes/AddNode.tsx
+import { Handle, Position, NodeProps } from 'reactflow'
+import { NodeModule } from './types'
 
-export default function AddNode({ data, selected }: NodeProps) {
-  const inputs = data.inputs || {};
-  const result = (Object.values(inputs) as number[]).reduce((sum, val) => sum + val, 0);
-  data.result = result;
-
-  const handleInput = (id: string, value: number) => {
-    data.inputs = { ...data.inputs, [id]: value };
-  };
+function AddNodeComponent({ data, selected }: NodeProps) {
+  const name = data.name || 'Add'
+  const result = data.result ?? '–'
 
   return (
     <div
@@ -17,24 +14,23 @@ export default function AddNode({ data, selected }: NodeProps) {
       tabIndex={0}
       data-no-drag
     >
-      <div className="font-bold mb-1">{data.name || 'Add'}</div>
+      <div className="font-bold mb-1">{name}</div>
       <div className="text-xs mb-1">Summe: {result}</div>
 
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="in-1"
-        style={{ top: '30%' }}
-        onConnect={(_) => handleInput('in-1', 0)}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="in-2"
-        style={{ top: '70%' }}
-        onConnect={(_) => handleInput('in-2', 0)}
-      />
+      <Handle type="target" position={Position.Left} id="in-1" style={{ top: '30%' }} />
+      <Handle type="target" position={Position.Left} id="in-2" style={{ top: '70%' }} />
       <Handle type="source" position={Position.Right} id="out" style={{ top: '50%' }} />
     </div>
-  );
+  )
+}
+
+export const AddNode: NodeModule = {
+  type: 'add',
+  label: '➕ Add',
+  description: 'Addiert zwei Werte.',
+  Component: AddNodeComponent,
+  defaultData: { name: 'Add' },
+  evaluate: (inputs) => {
+    return (Object.values(inputs) as number[]).reduce((sum, val) => sum + val, 0)
+  }
 }

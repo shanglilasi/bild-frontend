@@ -1,61 +1,55 @@
-import { Handle, Position, NodeProps } from 'reactflow';
-import { useState, useEffect } from 'react';
+// src/components/Node/nodes/ConcatNode.tsx
+import { Handle, Position, NodeProps } from 'reactflow'
+import { useState, useEffect } from 'react'
+import { NodeModule } from './types'
 
-export default function ConcatNode({ data, selected }: NodeProps) {
-  const [inputOrder, setInputOrder] = useState<string[]>(data.inputOrder || ['in-1', 'in-2']);
-  const [enabledInputs, setEnabledInputs] = useState<Record<string, boolean>>(data.enabledInputs || {});
-  const inputs = data.inputs || {};
+function ConcatNodeComponent({ data, selected }: NodeProps) {
+  const [inputOrder, setInputOrder] = useState<string[]>(data.inputOrder || ['in-1', 'in-2'])
+  const [enabledInputs, setEnabledInputs] = useState<Record<string, boolean>>(data.enabledInputs || {})
 
-  // Ergebnis erzeugen
-  const result = inputOrder
-    .filter((id) => enabledInputs[id] !== false)
-    .map((id) => String(inputs[id] ?? ''))
-    .join('');
+  const result = data.result ?? ''
 
-  data.result = result;
-  data.inputOrder = inputOrder;
-  data.enabledInputs = enabledInputs;
-
+  // Initialzustand der Eingänge
   useEffect(() => {
-    if (!data.inputOrder) {
-      const initialOrder = ['in-1', 'in-2'];
+    if (!data.inputOrder || !data.enabledInputs) {
+      const initialOrder = ['in-1', 'in-2']
       const initialEnabled: Record<string, boolean> = {
         'in-1': true,
         'in-2': true,
-      };
-      setInputOrder(initialOrder);
-      setEnabledInputs(initialEnabled);
-      data.inputOrder = initialOrder;
-      data.enabledInputs = initialEnabled;
+      }
+      setInputOrder(initialOrder)
+      setEnabledInputs(initialEnabled)
+      data.inputOrder = initialOrder
+      data.enabledInputs = initialEnabled
     }
-  }, [data]);
+  }, [data])
 
   const toggleInput = (id: string) => {
-    const updated = { ...enabledInputs, [id]: !enabledInputs[id] };
-    setEnabledInputs(updated);
-    data.enabledInputs = updated;
-  };
+    const updated = { ...enabledInputs, [id]: !enabledInputs[id] }
+    setEnabledInputs(updated)
+    data.enabledInputs = updated
+  }
 
   const addInput = () => {
-    const nextIndex = inputOrder.length + 1;
-    const newId = `in-${nextIndex}`;
-    const newOrder = [...inputOrder, newId];
-    const newEnabled = { ...enabledInputs, [newId]: true };
+    const nextIndex = inputOrder.length + 1
+    const newId = `in-${nextIndex}`
+    const newOrder = [...inputOrder, newId]
+    const newEnabled = { ...enabledInputs, [newId]: true }
 
-    setInputOrder(newOrder);
-    setEnabledInputs(newEnabled);
-    data.inputOrder = newOrder;
-    data.enabledInputs = newEnabled;
-  };
+    setInputOrder(newOrder)
+    setEnabledInputs(newEnabled)
+    data.inputOrder = newOrder
+    data.enabledInputs = newEnabled
+  }
 
   return (
-  <div
-  className={`p-2 border rounded shadow text-center min-w-[120px] relative outline-none ${
-    selected ? 'ring-2 ring-blue-400' : ''
-  }`}
-  tabIndex={0}
-  data-no-drag
->
+    <div
+      className={`p-2 border rounded shadow text-center min-w-[120px] relative outline-none ${
+        selected ? 'ring-2 ring-blue-400' : ''
+      }`}
+      tabIndex={0}
+      data-no-drag
+    >
       <div className="font-bold text-center mb-2">{data.name || 'Concat'}</div>
 
       {inputOrder.map((id) => (
@@ -89,5 +83,29 @@ export default function ConcatNode({ data, selected }: NodeProps) {
 
       <Handle type="source" position={Position.Right} id="out" style={{ top: '50%' }} />
     </div>
-  );
+  )
+}
+
+export const ConcatNode: NodeModule = {
+  type: 'concat',
+  label: '🔗 Concat',
+  description: 'Verbindet mehrere Texte.',
+  Component: ConcatNodeComponent,
+  defaultData: {
+    name: 'Concat',
+    inputOrder: ['in-1', 'in-2'],
+    enabledInputs: {
+      'in-1': true,
+      'in-2': true,
+    },
+  },
+  evaluate: (inputs, data) => {
+    const order = data.inputOrder || Object.keys(inputs)
+    const enabled = data.enabledInputs || {}
+
+    return order
+      .filter((id: string) => enabled[id] !== false)
+      .map((id: string) => String(inputs[id] ?? ''))
+      .join('')
+  },
 }

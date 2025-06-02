@@ -5,6 +5,11 @@ type NodeOption = {
   description: string
 }
 
+
+
+
+
+
 const NODE_OPTIONS: NodeOption[] = [
   {
     type: 'add',
@@ -26,6 +31,11 @@ const NODE_OPTIONS: NodeOption[] = [
     label: '🔗 Concat',
     description: 'Verbindet Strings von mehreren Eingängen.',
   },
+  {
+  type: 'max',
+  label: '⬆ Max',
+  description: 'Gibt den größeren der beiden Eingänge aus.',
+}
 ]
 
 export default function NodeTypeSelectorModal({

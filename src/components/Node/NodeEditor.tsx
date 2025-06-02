@@ -17,19 +17,14 @@ import ReactFlow, {
 
 import type { Node } from 'reactflow';
 import 'reactflow/dist/style.css';
+import NodeSettingsModal from './NodeSettingsModal'
+import { nodeRegistry } from './NodeRegistry'
 
-import AddNode from './nodes/AddNode';
-import IfNode from './nodes/IfNode';
-import InputSliderNode from './nodes/InputSlider';
-import NodeSettingsModal from './NodeSettingsModal';
-import ConcatNode from './nodes/ConcatNode';
+const nodeTypes = Object.fromEntries(
+  nodeRegistry.map(({ type, Component }) => [type, Component])
+)
 
-const nodeTypes = {
-  add: AddNode,
-  if: IfNode,
-  slide: InputSliderNode,
-  concat: ConcatNode, // <--- Neu im Heu
-};
+
 
 export default function NodeEditor() {
   const [nodes, setNodes] = useNodesState([]);
@@ -69,21 +64,29 @@ export default function NodeEditor() {
     });
   }, [nodes]);
 
-  const handleConnect = useCallback((connection: Connection) => {
-    if (isRunMode) return;
-    if (
-      connection.sourceHandle?.startsWith('out') &&
-      connection.targetHandle?.startsWith('in')
-    ) {
-      setEdges((eds) => {
-        const newEdges = addEdge({ ...connection, deletable: true }, eds);
-        updateNodes(nodes);
-        return newEdges;
-      });
-    } else {
-      alert('❌ Nur Ausgang → Eingang erlaubt');
-    }
-  }, [isRunMode, nodes]);
+  const handleConnect = (connection: Connection) => {
+  const { source, sourceHandle, target, targetHandle } = connection
+
+  if (!source || !target || !sourceHandle || !targetHandle) return
+  if (source === target) {
+    alert('Selbstverbindungen sind nicht erlaubt.')
+    return
+  }
+
+  // Verhindere Mehrfachverbindungen zu einem Eingang
+  const isAlreadyConnected = edges.some(
+    (e) =>
+      e.target === target &&
+      e.targetHandle === targetHandle
+  )
+
+  if (isAlreadyConnected) {
+    alert(`Der Eingang "${targetHandle}" ist bereits verbunden.`)
+    return
+  }
+
+  setEdges((eds) => addEdge(connection, eds))
+}
 
   const toggleMode = () => {
     const mode = !isRunMode ? 'run' : 'design';
@@ -109,55 +112,43 @@ export default function NodeEditor() {
     );
   };
 
-  const getDefaultName = (type: string) => {
-    switch (type) {
-      case 'slide':
-        return 'InputSlider';
-      case 'add':
-        return 'Add';
-      case 'if':
-        return 'If';
-      case 'concat':
-        return 'Concat';  
-      default:
-        return 'Node';
-    }
-  };
+
 
   const handleCanvasClick = useCallback(
-    (event: React.MouseEvent) => {
-      if (isRunMode || !pendingType || !reactFlowWrapper.current) return;
-      if (pendingType === 'select') return; // <- Wichtig: Auswahl noch nicht erfolgt!
-      const bounds = reactFlowWrapper.current.getBoundingClientRect();
-      const position = reactFlowInstance.project({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      });
+  (event: React.MouseEvent) => {
+    if (isRunMode || !pendingType || !reactFlowWrapper.current) return
+    if (pendingType === 'select') return
 
-      const id = `node-${nodes.length}`;
-      const newNode: Node = {
-        id,
-        type: pendingType,
-        position,
-        data: {
-          type: pendingType,
-          mode: 'design',
-          name: getDefaultName(pendingType),
-    ...(pendingType === 'slide' && {
-      range: { min: 0, max: 100 },
-      value: 50,
-    }),
-        },
-        draggable: true,
-        deletable: true,
-        selectable: true,
-      };
+    const bounds = reactFlowWrapper.current.getBoundingClientRect()
+    const position = reactFlowInstance.project({
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+    })
 
-      setNodes((nds) => [...nds, newNode]);
-      setPendingType(null);
-    },
-    [pendingType, nodes, isRunMode, reactFlowInstance]
-  );
+    const module = nodeRegistry.find((mod) => mod.type === pendingType)
+    if (!module) return
+
+    const id = `node-${nodes.length}`
+
+    const newNode: Node = {
+      id,
+      type: pendingType,
+      position,
+      data: {
+        ...module.defaultData,
+        type: pendingType, // sicherheitshalber nochmal setzen
+        mode: 'design',
+      },
+      draggable: true,
+      deletable: true,
+      selectable: true,
+    }
+
+    setNodes((nds) => [...nds, newNode])
+    setPendingType(null)
+  },
+  [pendingType, nodes, isRunMode, reactFlowInstance]
+)
 
   const exportGraph = () => {
     const blob = new Blob([JSON.stringify({ nodes, edges }, null, 2)], { type: 'application/json' });
@@ -184,7 +175,7 @@ export default function NodeEditor() {
           data: {
             ...n.data,
             mode,
-            name: n.data.name || getDefaultName(n.type),
+            name: n.data.name ,
           },
           draggable: isDesign,
           deletable: isDesign,
