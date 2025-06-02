@@ -33,7 +33,6 @@ export function detectCycle(nodes: Node[], edges: Edge[]): boolean {
 
   return false;
 }
-
 export function propagateSignalsRecursively(nodes: Node[], edges: Edge[]): Node[] {
   const nodeMap = new Map(nodes.map((n) => [n.id, { ...n }]));
   const inputsMap = new Map<string, string[]>();
@@ -65,17 +64,32 @@ export function propagateSignalsRecursively(nodes: Node[], edges: Edge[]): Node[
     if (!node) return;
 
     const incoming = edges.filter((e) => e.target === id);
-    const inputs: Record<string, number> = {};
+    const inputs: Record<string, any> = {};
     incoming.forEach((edge) => {
       const sourceNode = nodeMap.get(edge.source);
       const value = sourceNode?.data.result ?? sourceNode?.data.value ?? 0;
-      inputs[edge.source] = value;
+      const inputId = edge.targetHandle || edge.source;
+        inputs[inputId] = value;
+
+
+
     });
 
     let result = node.data.result;
 
+    // 🔢 Addition
     if (node.type === 'add') {
       result = Object.values(inputs).reduce((a, b) => a + b, 0);
+    }
+
+    // 🔗 String-Konkatenation (ConcatNode)
+    if (node.type === 'concat') {
+      const inputOrder = node.data.inputOrder || Object.keys(inputs);
+      const enabledInputs = node.data.enabledInputs || {};
+      result = inputOrder
+        .filter((id: string) => enabledInputs[id] !== false)
+        .map((id: string) => String(inputs[id] ?? ''))
+        .join('');
     }
 
     const updatedNode: Node = {

@@ -50,15 +50,15 @@ useEffect(() => {
 
   return (
     
+
 <div
-  className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+  className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
   onClick={onClose}
 >
-
-      <div
-  className="bg-white p-4 rounded shadow-md w-96 max-w-full"
-  onClick={(e) => e.stopPropagation()}
->
+  <div
+    className="bg-white p-4 rounded shadow-md w-96 max-w-full"
+    onClick={(e) => e.stopPropagation()}
+  >
         <h2 className="text-lg font-bold mb-4">Einstellungen: {node.data.type}</h2>
 
         {/* Gemeinsames Feld: Name */}

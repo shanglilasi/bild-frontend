@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { detectCycle, propagateSignalsRecursively } from './signalPropagation';
-
+import NodeTypeSelectorModal from './nodes/NodeTypeSelectorModal';
 import ReactFlow, {
   addEdge,
   Background,
@@ -22,12 +22,13 @@ import AddNode from './nodes/AddNode';
 import IfNode from './nodes/IfNode';
 import InputSliderNode from './nodes/InputSlider';
 import NodeSettingsModal from './NodeSettingsModal';
-
+import ConcatNode from './nodes/ConcatNode';
 
 const nodeTypes = {
   add: AddNode,
   if: IfNode,
   slide: InputSliderNode,
+  concat: ConcatNode, // <--- Neu im Heu
 };
 
 export default function NodeEditor() {
@@ -116,6 +117,8 @@ export default function NodeEditor() {
         return 'Add';
       case 'if':
         return 'If';
+      case 'concat':
+        return 'Concat';  
       default:
         return 'Node';
     }
@@ -124,7 +127,7 @@ export default function NodeEditor() {
   const handleCanvasClick = useCallback(
     (event: React.MouseEvent) => {
       if (isRunMode || !pendingType || !reactFlowWrapper.current) return;
-
+      if (pendingType === 'select') return; // <- Wichtig: Auswahl noch nicht erfolgt!
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance.project({
         x: event.clientX - bounds.left,
@@ -140,6 +143,10 @@ export default function NodeEditor() {
           type: pendingType,
           mode: 'design',
           name: getDefaultName(pendingType),
+    ...(pendingType === 'slide' && {
+      range: { min: 0, max: 100 },
+      value: 50,
+    }),
         },
         draggable: true,
         deletable: true,
@@ -220,7 +227,11 @@ export default function NodeEditor() {
     >
       <div className="absolute left-4 top-4 z-50 bg-white p-2 rounded shadow flex gap-2">
      
-        <button onClick={() => !isRunMode && setPendingType('add')}>➕ Neue Node</button>
+        
+        <button onClick={() => !isRunMode && setPendingType('select')}>➕ Neue Node</button>
+
+
+
         <button onClick={exportGraph}>⬇️ Export</button>
         <button onClick={() => inputRef.current?.click()}>⬆️ Import</button>
         <button onClick={toggleMode}>
@@ -267,6 +278,14 @@ export default function NodeEditor() {
         )
       );
     }}
+  />
+)}
+{pendingType === 'select' && (
+  <NodeTypeSelectorModal
+    onSelect={(type) => {
+      setPendingType(type);
+    }}
+    onClose={() => setPendingType(null)}
   />
 )}
     </div>

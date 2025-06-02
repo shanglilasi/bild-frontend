@@ -11,7 +11,6 @@ export default function AddNode({ data, selected }: NodeProps) {
 
   return (
     <div
-      
       className={`p-2 border rounded shadow text-center min-w-[120px] relative outline-none ${
         selected ? 'ring-2 ring-blue-400' : ''
       }`}
