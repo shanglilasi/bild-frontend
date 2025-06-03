@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { detectCycle, propagateSignalsRecursively } from './signalPropagation';
 import NodeTypeSelectorModal from './nodes/NodeTypeSelectorModal';
@@ -14,23 +13,21 @@ import ReactFlow, {
   applyEdgeChanges,
   NodeChange,
   EdgeChange,
+  Node,
 } from 'reactflow';
 
-import type { Node } from 'reactflow';
 import 'reactflow/dist/style.css';
-import NodeSettingsModal from './NodeSettingsModal'
-import { nodeRegistry } from './NodeRegistry'
+import NodeSettingsModal from './NodeSettingsModal';
+import { nodeRegistry } from './NodeRegistry';
 
 const nodeTypes = Object.fromEntries(
   nodeRegistry.map(({ type, Component }) => [type, Component])
-)
-
-
+);
 
 export default function NodeEditor() {
   const [nodes, setNodes] = useNodesState([]);
   const [edges, setEdges] = useEdgesState([]);
-  
+
   const [pendingType, setPendingType] = useState<string | null>(null);
   const [isRunMode, setIsRunMode] = useState(false);
   const [activeNodeForModal, setActiveNodeForModal] = useState<Node | null>(null);
@@ -49,45 +46,55 @@ export default function NodeEditor() {
     setNodes(updated);
   };
 
-  const handleNodeChange = useCallback((changes: NodeChange[]) => {
-    setNodes((nds) => {
-      const changed = applyNodeChanges(changes, nds);
-      updateNodes(changed);
-      return changed;
-    });
-  }, [edges]);
+  const handleNodeChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((prevNodes) => {
+        const safeChanges = changes.map((change) => {
+          // Nur Positions- oder Selektions-Änderungen blockieren im Run-Modus
+          if (isRunMode && ['position', 'select', 'dimensions'].includes(change.type)) {
+            return { ...change, position: undefined, selected: undefined };
+          }
+          return change;
+        });
 
-  const handleEdgeChange = useCallback((changes: EdgeChange[]) => {
-    setEdges((eds) => {
-      const updated = applyEdgeChanges(changes, eds);
-      updateNodes(nodes);
-      return updated;
-    });
-  }, [nodes]);
+        const changed = applyNodeChanges(safeChanges, prevNodes);
+        updateNodes(changed);
+        return changed;
+      });
+    },
+    [edges, isRunMode]
+  );
+
+  const handleEdgeChange = useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges((eds) => {
+        const updated = applyEdgeChanges(changes, eds);
+        updateNodes(nodes);
+        return updated;
+      });
+    },
+    [nodes]
+  );
 
   const handleConnect = (connection: Connection) => {
-  const { source, sourceHandle, target, targetHandle } = connection
+    const { source, sourceHandle, target, targetHandle } = connection;
 
-  if (!source || !target || !sourceHandle || !targetHandle) return
-  if (source === target) {
-    alert('Selbstverbindungen sind nicht erlaubt.')
-    return
-  }
+    if (!source || !target || !sourceHandle || !targetHandle) return;
+    if (source === target) {
+      alert('Selbstverbindungen sind nicht erlaubt.');
+      return;
+    }
 
-  // Verhindere Mehrfachverbindungen zu einem Eingang
-  const isAlreadyConnected = edges.some(
-    (e) =>
-      e.target === target &&
-      e.targetHandle === targetHandle
-  )
+    const isAlreadyConnected = edges.some(
+      (e) => e.target === target && e.targetHandle === targetHandle
+    );
+    if (isAlreadyConnected) {
+      alert(`Der Eingang "${targetHandle}" ist bereits verbunden.`);
+      return;
+    }
 
-  if (isAlreadyConnected) {
-    alert(`Der Eingang "${targetHandle}" ist bereits verbunden.`)
-    return
-  }
-
-  setEdges((eds) => addEdge(connection, eds))
-}
+    setEdges((eds) => addEdge(connection, eds));
+  };
 
   const toggleMode = () => {
     const mode = !isRunMode ? 'run' : 'design';
@@ -113,46 +120,46 @@ export default function NodeEditor() {
     );
   };
 
-
-
   const handleCanvasClick = useCallback(
-  (event: React.MouseEvent) => {
-    if (isRunMode || !pendingType || !reactFlowWrapper.current) return
-    if (pendingType === 'select') return
+    (event: React.MouseEvent) => {
+      if (isRunMode || !pendingType || !reactFlowWrapper.current) return;
+      if (pendingType === 'select') return;
 
-    const bounds = reactFlowWrapper.current.getBoundingClientRect()
-    const position = reactFlowInstance.project({
-      x: event.clientX - bounds.left,
-      y: event.clientY - bounds.top,
-    })
+      const bounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = reactFlowInstance.project({
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
+      });
 
-    const module = nodeRegistry.find((mod) => mod.type === pendingType)
-    if (!module) return
+      const module = nodeRegistry.find((mod) => mod.type === pendingType);
+      if (!module) return;
 
-    const id = `node-${nodes.length}`
+      const id = `node-${nodes.length}`;
 
-    const newNode: Node = {
-      id,
-      type: pendingType,
-      position,
-      data: {
-        ...module.defaultData,
-        type: pendingType, // sicherheitshalber nochmal setzen
-        mode: 'design',
-      },
-      draggable: true,
-      deletable: true,
-      selectable: true,
-    }
+      const newNode: Node = {
+        id,
+        type: pendingType,
+        position,
+        data: {
+          ...module.defaultData,
+          type: pendingType,
+          mode: 'design',
+        },
+        draggable: true,
+        deletable: true,
+        selectable: true,
+      };
 
-    setNodes((nds) => [...nds, newNode])
-    setPendingType(null)
-  },
-  [pendingType, nodes, isRunMode, reactFlowInstance]
-)
+      setNodes((nds) => [...nds, newNode]);
+      setPendingType(null);
+    },
+    [pendingType, nodes, isRunMode, reactFlowInstance]
+  );
 
   const exportGraph = () => {
-    const blob = new Blob([JSON.stringify({ nodes, edges }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ nodes, edges }, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -164,6 +171,7 @@ export default function NodeEditor() {
   const importGraph = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -176,7 +184,7 @@ export default function NodeEditor() {
           data: {
             ...n.data,
             mode,
-            name: n.data.name ,
+            name: n.data.name,
           },
           draggable: isDesign,
           deletable: isDesign,
@@ -195,6 +203,7 @@ export default function NodeEditor() {
         alert('❌ Ungültige Datei');
       }
     };
+
     reader.readAsText(file);
   };
 
@@ -206,6 +215,7 @@ export default function NodeEditor() {
         deleteElements({ nodes: selectedNodes, edges: selectedEdges });
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isRunMode]);
@@ -218,12 +228,9 @@ export default function NodeEditor() {
       className={isRunMode ? 'bg-green-100' : 'bg-gray-100'}
     >
       <div className="absolute left-4 top-4 z-50 bg-white p-2 rounded shadow flex gap-2">
-     
-        
-        <button onClick={() => !isRunMode && setPendingType('select')}>➕ Neue Node</button>
-
-
-
+        <button onClick={() => !isRunMode && setPendingType('select')}>
+          ➕ Neue Node
+        </button>
         <button onClick={exportGraph}>⬇️ Export</button>
         <button onClick={() => inputRef.current?.click()}>⬆️ Import</button>
         <button onClick={toggleMode}>
@@ -241,7 +248,7 @@ export default function NodeEditor() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={!isRunMode ? handleNodeChange : undefined}
+        onNodesChange={handleNodeChange}
         onEdgesChange={!isRunMode ? handleEdgeChange : undefined}
         onConnect={handleConnect}
         onNodesDelete={isRunMode ? () => false : undefined}
@@ -258,28 +265,29 @@ export default function NodeEditor() {
       </ReactFlow>
 
       {activeNodeForModal && (
-  <NodeSettingsModal
-    node={activeNodeForModal}
-    onClose={() => setActiveNodeForModal(null)}
-    onUpdate={(updatedData) => {
-      setNodes((nodes) =>
-        nodes.map((n) =>
-          n.id === activeNodeForModal.id
-            ? { ...n, data: { ...n.data, ...updatedData } }
-            : n
-        )
-      );
-    }}
-  />
-)}
-{pendingType === 'select' && (
-  <NodeTypeSelectorModal
-    onSelect={(type) => {
-      setPendingType(type);
-    }}
-    onClose={() => setPendingType(null)}
-  />
-)}
+        <NodeSettingsModal
+          node={activeNodeForModal}
+          onClose={() => setActiveNodeForModal(null)}
+          onUpdate={(updatedData) => {
+            setNodes((nodes) => {
+              const updated = nodes.map((n) =>
+                n.id === activeNodeForModal.id
+                  ? { ...n, data: { ...n.data, ...updatedData } }
+                  : n
+              );
+              const propagated = propagateSignalsRecursively(updated, edges);
+              return propagated;
+            });
+          }}
+        />
+      )}
+
+      {pendingType === 'select' && (
+        <NodeTypeSelectorModal
+          onSelect={(type) => setPendingType(type)}
+          onClose={() => setPendingType(null)}
+        />
+      )}
     </div>
   );
 }
